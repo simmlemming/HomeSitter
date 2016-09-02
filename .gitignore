@@ -1,0 +1,11 @@
+app/src/main/res/values/keys.xml
+server/org/homesitter/keys.py
+**/.idea
+*.iml
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
