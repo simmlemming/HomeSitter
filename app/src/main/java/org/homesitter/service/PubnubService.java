@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.pubnub.api.Pubnub;
 import com.pubnub.api.PubnubError;
@@ -40,7 +41,7 @@ public class PubnubService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
+        Log.i(TAG, getClass().getSimpleName() + ".onCreate(), " + toString());
         homeUuid = getResources().getString(R.string.home_uuid);
 
         String pubKey = getResources().getString(R.string.pub_key);
@@ -156,6 +157,7 @@ public class PubnubService extends Service {
 
     @Override
     public void onDestroy() {
+        Log.i(TAG, getClass().getSimpleName() + ".onDestroy(), " + toString());
         pubnub.unsubscribe(getResources().getString(R.string.main_channel_id));
         super.onDestroy();
     }
