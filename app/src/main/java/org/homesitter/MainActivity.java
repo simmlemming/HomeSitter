@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import org.homesitter.model.Picture;
+import org.homesitter.model.State;
 import org.homesitter.service.PubnubService;
 
 import java.text.SimpleDateFormat;
@@ -65,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         timeView.setText(DATE_FORMAT.format(picture.timeMs));
     }
 
-    private void updateUi(PubnubService.State state) {
+    private void updateUi(State state) {
         int colorResId;
         int textResId;
 

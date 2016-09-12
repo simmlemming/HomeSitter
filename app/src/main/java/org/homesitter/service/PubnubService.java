@@ -15,6 +15,7 @@ import org.homesitter.HomeSitter;
 import org.homesitter.Messages;
 import org.homesitter.R;
 import org.homesitter.model.Picture;
+import org.homesitter.model.State;
 import org.json.JSONObject;
 
 import java.util.Calendar;
@@ -30,24 +31,7 @@ public class PubnubService extends Service {
 
     private boolean isConnected = false;
     private boolean isHomeConnected = false;
-
-    public void onNewPicture(Picture picture) {
-        getApplicationContext().getSettings().putLastPicture(picture);
-        notifyNewPicture(picture);
-    }
-
-    public static class State {
-        public final boolean isConnected;
-        public final boolean isHomeConnected;
-        @Nullable
-        public final Picture lastPicture;
-
-        public State(boolean isConnected, boolean isHomeConnected, @Nullable Picture lastPicture) {
-            this.isConnected = isConnected;
-            this.isHomeConnected = isHomeConnected;
-            this.lastPicture = lastPicture;
-        }
-    }
+    private Picture lastPicture;
 
     public static Intent intent(Context context) {
         return new Intent(context, PubnubService.class);
@@ -66,6 +50,11 @@ public class PubnubService extends Service {
         pubnub = new Pubnub(pubKey, subKey, true);
         pubnub.setUUID("client_1");
 
+        State lastState = getApplicationContext().getStorage().getState();
+        if (lastState != null) {
+            lastPicture = lastState.lastPicture;
+        }
+
         subscribe(mainChannelId);
         requestCheckIsHomeConnected();
         subscribeForPresence();
@@ -75,7 +64,6 @@ public class PubnubService extends Service {
     public void requestLastPictureIfNeeded() {
         HomeSitter.HomeSitterSettings settings = getApplicationContext().getSettings();
 
-        Picture lastPicture = settings.getLastPicture();
         long picturesIntervalMs = settings.getPicturesIntervalMs();
         long currentTimeMs = Calendar.getInstance().getTimeInMillis();
 
@@ -96,6 +84,13 @@ public class PubnubService extends Service {
                 notifyStateChanged("Cannot request new picture: " + error.getErrorString());
             }
         });
+    }
+
+    public void onNewPicture(Picture picture) {
+        lastPicture = picture;
+        getApplicationContext().getStorage().putState(currentState());
+
+        notifyStateChanged(null);
     }
 
     private void subscribeForPresence() {
@@ -123,8 +118,7 @@ public class PubnubService extends Service {
         notifyStateChanged(null);
     }
 
-    private State getState() {
-        Picture lastPicture = getApplicationContext().getSettings().getLastPicture();
+    private State currentState() {
         return new State(isConnected, isHomeConnected, lastPicture);
     }
 
@@ -147,13 +141,8 @@ public class PubnubService extends Service {
     }
 
     void notifyStateChanged(String userFriendlyMessage) {
-        StateUpdatedEvent event = new StateUpdatedEvent(getState(), userFriendlyMessage);
+        StateUpdatedEvent event = new StateUpdatedEvent(currentState(), userFriendlyMessage);
         getApplicationContext().getEventBus().post(event);
-    }
-
-    private void notifyNewPicture(Picture picture) {
-        getApplicationContext().getSettings().putLastPicture(picture);
-        notifyStateChanged(null);
     }
 
     @Override
@@ -178,7 +167,6 @@ public class PubnubService extends Service {
     }
 
     public class LocalBinder extends Binder {
-
         public PubnubService service() {
             return PubnubService.this;
         }
