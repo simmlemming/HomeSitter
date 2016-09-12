@@ -21,6 +21,8 @@ class SubscribeCallback extends BasePubnubCallback {
 
     @Override
     public void successCallback(String channel, Object message, String timetoken) {
+        super.successCallback(channel, message, timetoken);
+
         if (Messages.isNewPicture(message)) {
             Picture picture = null;
             try {

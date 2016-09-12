@@ -18,6 +18,11 @@ class BasePubnubCallback extends Callback {
     }
 
     @Override
+    public void successCallback(String channel, Object message, String timetoken) {
+        Log.i(PubnubService.TAG, getClass().getSimpleName() + ".successCallback() called with: " + "channel = [" + channel + "], message = [" + message + "], timetoken = [" + timetoken + "]");
+    }
+
+    @Override
     public void successCallback(String channel, Object message) {
         Log.d(PubnubService.TAG, getClass().getSimpleName() + ".successCallback() called with: " + "channel = [" + channel + "], message = [" + message + "]");
     }
