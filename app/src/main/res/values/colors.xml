@@ -8,4 +8,5 @@
     <color name="white">#eeeeee</color>
     <color name="ok">#33aa33</color>
     <color name="error">#ee3333</color>
+    <color name="neutral">#666666</color>
 </resources>

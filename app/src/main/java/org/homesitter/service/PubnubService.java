@@ -29,8 +29,9 @@ public class PubnubService extends Service {
     private Pubnub pubnub;
     private String homeUuid, mainChannelId;
 
-    private boolean isConnected = false;
-    private boolean isHomeConnected = false;
+    private ConnectionState connectionState = ConnectionState.CONNECTING;
+    private ConnectionState homeConnectionState = ConnectionState.DISCONNECTED;
+
     private Picture lastPicture;
 
     public static Intent intent(Context context) {
@@ -118,12 +119,14 @@ public class PubnubService extends Service {
     }
 
     private State currentState() {
-        return new State(isConnected, isHomeConnected, lastPicture);
+        return new State(connectionState, homeConnectionState, lastPicture);
     }
 
     void setConnected(boolean connected) {
-        boolean stateChanged = isConnected == connected;
-        isConnected = connected;
+        ConnectionState newState = ConnectionState.fromBoolean(connected);
+        boolean stateChanged = connectionState != newState;
+
+        connectionState = newState;
 
         if (stateChanged) {
             notifyStateChanged(null);
@@ -131,8 +134,9 @@ public class PubnubService extends Service {
     }
 
     void setHomeConnected(boolean connected) {
-        boolean stateChanged = (isHomeConnected != connected);
-        isHomeConnected = connected;
+        ConnectionState newState = ConnectionState.fromBoolean(connected);
+        boolean stateChanged = homeConnectionState != newState;
+        homeConnectionState = newState;
 
         if (stateChanged) {
             notifyStateChanged(null);
@@ -180,6 +184,16 @@ public class PubnubService extends Service {
         public StateUpdatedEvent(State state, String userFriendlyMessage) {
             this.userFriendlyMessage = userFriendlyMessage;
             this.state = state;
+        }
+    }
+
+    public enum ConnectionState {
+        DISCONNECTED,
+        CONNECTING,
+        CONNECTED;
+
+        public static ConnectionState fromBoolean(boolean connected) {
+            return connected ? CONNECTED : DISCONNECTED;
         }
     }
 }

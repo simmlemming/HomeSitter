@@ -9,6 +9,8 @@ import org.homesitter.model.State;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.homesitter.service.PubnubService.ConnectionState.CONNECTED;
+import static org.homesitter.service.PubnubService.ConnectionState.DISCONNECTED;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -20,7 +22,7 @@ public class StorageTest {
     @Test
     public void getState_withPicture() {
         Picture pic = new Picture("http://last.pic/wwefw.jpg", 987293782762L);
-        State state = new State(true, false, pic);
+        State state = new State(CONNECTED, DISCONNECTED, pic);
 
         Storage storage = getStorage();
 
@@ -32,7 +34,7 @@ public class StorageTest {
 
     @Test
     public void getState_withoutPicture() {
-        State state = new State(true, false, null);
+        State state = new State(CONNECTED, DISCONNECTED, null);
 
         Storage storage = getStorage();
 

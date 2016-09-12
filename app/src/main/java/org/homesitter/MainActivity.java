@@ -67,22 +67,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateUi(State state) {
-        int colorResId;
-        int textResId;
+        UiState uiState = UiState.forState(state);
 
-        if (state.isHomeConnected && state.isConnected) {
-            colorResId = R.color.ok;
-            textResId = R.string.status_ok;
-        } else if (!state.isConnected) {
-            colorResId = R.color.error;
-            textResId = R.string.status_disconnected;
-        } else {
-            colorResId = R.color.error;
-            textResId = R.string.status_home_disconnected;
-        }
-
-        stateView.setText(getString(textResId));
-        stateView.setBackgroundColor(getResources().getColor(colorResId));
+        stateView.setText(getString(uiState.textResId));
+        stateView.setBackgroundColor(getResources().getColor(uiState.colorResId));
 
         if (state.lastPicture != null) {
             loadPicture(state.lastPicture);
