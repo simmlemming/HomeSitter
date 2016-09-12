@@ -8,7 +8,7 @@ import org.json.JSONObject;
  */
 public class Picture {
     public final String link;
-    public final long time;
+    public final long timeMs;
 
     public static Picture fromMessage(JSONObject message) throws JSONException {
         String link = message.getString("link");
@@ -16,8 +16,8 @@ public class Picture {
         return new Picture(link, time);
     }
 
-    public Picture(String link, long time) {
+    public Picture(String link, long timeMs) {
         this.link = link;
-        this.time = time;
+        this.timeMs = timeMs;
     }
 }

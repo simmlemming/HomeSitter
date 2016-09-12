@@ -13,6 +13,8 @@ import de.greenrobot.event.EventBus;
  * Created by mtkachenko on 02/09/16.
  */
 public class HomeSitter extends Application {
+    private static final int DEFAULT_PICTURES_INTERVAL_MS = 5 * 60 * 1000;
+
     public static String TAG = "HomeSitter";
     private EventBus eventBus;
 
@@ -33,23 +35,24 @@ public class HomeSitter extends Application {
     }
 
     public class HomeSitterSettings {
-
-        public static final String LAST_PICTURE_LINK = "last_picture_link";
-        public static final String LAST_PICTURE_TIME = "last_picture_time";
+        private static final String LAST_PICTURE_LINK = "last_picture_link";
+        private static final String LAST_PICTURE_TIME = "last_picture_time";
+        private static final String PICTURES_INTERVAL = "pictures_interval";
 
         private HomeSitterSettings() {
 
         }
 
-        public String getString(String key, String defaultValue) {
-            return getPreferences().getString(key, defaultValue);
+        // This value must be in sync with server (currently it's also hardcoded on server)
+        public long getPicturesIntervalMs() {
+            return getPreferences().getLong(PICTURES_INTERVAL, DEFAULT_PICTURES_INTERVAL_MS);
         }
 
         public void putLastPicture(Picture picture) {
             getPreferences()
                     .edit()
                     .putString(LAST_PICTURE_LINK, picture.link)
-                    .putLong(LAST_PICTURE_TIME, picture.time)
+                    .putLong(LAST_PICTURE_TIME, picture.timeMs)
                     .apply();
         }
 
@@ -64,13 +67,6 @@ public class HomeSitter extends Application {
 
             long time = preferences.getLong(LAST_PICTURE_TIME, 0);
             return new Picture(link, time);
-        }
-
-        public void put(String key, String value) {
-            getPreferences()
-                    .edit()
-                    .putString(key, value)
-                    .apply();
         }
 
         private SharedPreferences getPreferences() {

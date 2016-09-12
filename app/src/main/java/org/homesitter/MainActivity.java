@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         takePictureView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                pubnubService.requestPicture();
+                pubnubService.requestNewPicture();
             }
         });
 
@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
                 .load(picture.link)
                 .into(lastImageView);
 
-        timeView.setText(DATE_FORMAT.format(picture.time));
+        timeView.setText(DATE_FORMAT.format(picture.timeMs));
     }
 
     private void updateUi(PubnubService.State state) {

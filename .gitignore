@@ -1,7 +1,14 @@
 app/src/main/res/values/keys.xml
+server/java/src/main/java/org/homesitter/Keys.java
 server/org/homesitter/keys.py
+
+server/deploy.sh
+server/java/id_rsa
+server/java/target/
+
 **/.idea
 *.iml
+**/__pycache__
 .gradle
 /local.properties
 /.idea/workspace.xml
@@ -9,4 +16,3 @@ server/org/homesitter/keys.py
 .DS_Store
 /build
 /captures
-**/__pycache__

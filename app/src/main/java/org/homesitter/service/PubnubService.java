@@ -17,6 +17,8 @@ import org.homesitter.R;
 import org.homesitter.model.Picture;
 import org.json.JSONObject;
 
+import java.util.Calendar;
+
 /**
  * Created by mtkachenko on 24/11/15.
  */
@@ -67,9 +69,25 @@ public class PubnubService extends Service {
         subscribe(mainChannelId);
         requestCheckIsHomeConnected();
         subscribeForPresence();
+        requestLastPictureIfNeeded();
     }
 
-    public void requestPicture() {
+    public void requestLastPictureIfNeeded() {
+        HomeSitter.HomeSitterSettings settings = getApplicationContext().getSettings();
+
+        Picture lastPicture = settings.getLastPicture();
+        long picturesIntervalMs = settings.getPicturesIntervalMs();
+        long currentTimeMs = Calendar.getInstance().getTimeInMillis();
+
+        boolean haveRecentPicture = (lastPicture != null) // Have last picture
+                                    && (currentTimeMs - lastPicture.timeMs) < picturesIntervalMs; // It's recent
+
+        if (!haveRecentPicture) {
+            pubnub.history(mainChannelId, false, new HistoryCallback(this));
+        }
+    }
+
+    public void requestNewPicture() {
         JSONObject message = Messages.newPictureRequest();
         pubnub.publish(mainChannelId, message, new BasePubnubCallback(this) {
             @Override
@@ -128,7 +146,7 @@ public class PubnubService extends Service {
         }
     }
 
-    private void notifyStateChanged(String userFriendlyMessage) {
+    void notifyStateChanged(String userFriendlyMessage) {
         StateUpdatedEvent event = new StateUpdatedEvent(getState(), userFriendlyMessage);
         getApplicationContext().getEventBus().post(event);
     }
@@ -136,8 +154,6 @@ public class PubnubService extends Service {
     private void notifyNewPicture(Picture picture) {
         getApplicationContext().getSettings().putLastPicture(picture);
         notifyStateChanged(null);
-//        NewPictureEvent event = new NewPictureEvent(picture);
-//        getApplicationContext().getEventBus().post(event);
     }
 
     @Override
