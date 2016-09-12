@@ -22,7 +22,7 @@ public class StorageTest {
     @Test
     public void getState_withPicture() {
         Picture pic = new Picture("http://last.pic/wwefw.jpg", 987293782762L);
-        State state = new State(CONNECTED, DISCONNECTED, pic);
+        State state = new State(true, CONNECTED, DISCONNECTED, pic);
 
         Storage storage = getStorage();
 
@@ -34,7 +34,7 @@ public class StorageTest {
 
     @Test
     public void getState_withoutPicture() {
-        State state = new State(CONNECTED, DISCONNECTED, null);
+        State state = new State(false, CONNECTED, DISCONNECTED, null);
 
         Storage storage = getStorage();
 

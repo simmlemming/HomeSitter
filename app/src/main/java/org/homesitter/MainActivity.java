@@ -72,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
         stateView.setText(getString(uiState.textResId));
         stateView.setBackgroundColor(getResources().getColor(uiState.colorResId));
 
+        takePictureView.setEnabled(!state.isPictureRequestInProgress);
+
         if (state.lastPicture != null) {
             loadPicture(state.lastPicture);
         }

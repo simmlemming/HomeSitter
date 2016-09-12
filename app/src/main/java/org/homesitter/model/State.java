@@ -10,12 +10,14 @@ import java.io.Serializable;
  * Created by mtkachenko on 12/09/16.
  */
 public class State implements Serializable {
+    public final boolean isPictureRequestInProgress;
     public final PubnubService.ConnectionState connectionState;
     public final PubnubService.ConnectionState homeConnectionState;
     @Nullable
     public final Picture lastPicture;
 
-    public State(PubnubService.ConnectionState connectionState, PubnubService.ConnectionState homeConnectionState, @Nullable Picture lastPicture) {
+    public State(boolean isPictureRequestInProgress, PubnubService.ConnectionState connectionState, PubnubService.ConnectionState homeConnectionState, @Nullable Picture lastPicture) {
+        this.isPictureRequestInProgress = isPictureRequestInProgress;
         this.connectionState = connectionState;
         this.homeConnectionState = homeConnectionState;
         this.lastPicture = lastPicture;
@@ -32,7 +34,8 @@ public class State implements Serializable {
                 ? other.lastPicture == null
                 : this.lastPicture.equals(other.lastPicture);
 
-        return this.connectionState == other.connectionState
+        return this.isPictureRequestInProgress == other.isPictureRequestInProgress
+                && this.connectionState == other.connectionState
                 && this.homeConnectionState == other.homeConnectionState
                 && pictureMatches;
     }
@@ -42,6 +45,7 @@ public class State implements Serializable {
         int code = 31 + 11 * connectionState.hashCode();
         code = code + 13 * homeConnectionState.hashCode();
         code = code + (lastPicture == null ? 0 : lastPicture.hashCode());
+        code = code + (isPictureRequestInProgress ? 49 : 57);
 
         return code;
     }

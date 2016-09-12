@@ -33,6 +33,7 @@ public class PubnubService extends Service {
     private ConnectionState homeConnectionState = ConnectionState.DISCONNECTED;
 
     private Picture lastPicture;
+    private boolean isPictureRequestInProgress = false;
 
     public static Intent intent(Context context) {
         return new Intent(context, PubnubService.class);
@@ -76,17 +77,27 @@ public class PubnubService extends Service {
     }
 
     public void requestNewPicture() {
+        if (isPictureRequestInProgress) {
+            return;
+        }
+
+        isPictureRequestInProgress = true;
+
         JSONObject message = Messages.newPictureRequest();
         pubnub.publish(mainChannelId, message, new BasePubnubCallback(this) {
             @Override
             public void errorCallback(String channel, PubnubError error) {
                 super.errorCallback(channel, error);
+                isPictureRequestInProgress = false;
                 notifyStateChanged("Cannot request new picture: " + error.getErrorString());
             }
         });
+
+        notifyStateChanged(null);
     }
 
     public void onNewPicture(Picture picture) {
+        isPictureRequestInProgress = false;
         lastPicture = picture;
         getApplicationContext().getStorage().putState(currentState());
 
@@ -119,7 +130,7 @@ public class PubnubService extends Service {
     }
 
     private State currentState() {
-        return new State(connectionState, homeConnectionState, lastPicture);
+        return new State(isPictureRequestInProgress, connectionState, homeConnectionState, lastPicture);
     }
 
     void setConnected(boolean connected) {
