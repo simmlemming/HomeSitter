@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         stateView.setText(getString(textResId));
-        stateView.setTextColor(getResources().getColor(colorResId));
+        stateView.setBackgroundColor(getResources().getColor(colorResId));
 
         if (state.lastPicture != null) {
             loadPicture(state.lastPicture);
