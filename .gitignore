@@ -9,3 +9,4 @@ server/org/homesitter/keys.py
 .DS_Store
 /build
 /captures
+**/__pycache__

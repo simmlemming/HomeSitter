@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.homesitter</groupId>
+    <artifactId>homesitter</artifactId>
+    <version>1.0</version>
+
+    <!--<pluginRepositories>-->
+    <!--<pluginRepository>-->
+    <!--<id>onejar-maven-plugin.googlecode.com</id>-->
+    <!--<url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>-->
+    <!--</pluginRepository>-->
+    <!--</pluginRepositories>-->
+
+    <repositories>
+        <repository>
+            <id>SarXos Repository</id>
+            <url>http://www.sarxos.pl/repo/maven2</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <plugins>
+            <!-- Includes the runtime dependencies -->
+            <plugin>
+                <!-- https://mvnrepository.com/artifact/com.jolira/onejar-maven-plugin -->
+                <groupId>com.jolira</groupId>
+                <artifactId>onejar-maven-plugin</artifactId>
+                <version>1.4.4</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>one-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <!-- Build an executable JAR -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>org.homesitter.HomeSitter</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <!--<dependency>-->
+            <!--<groupId>com.github.sarxos</groupId>-->
+            <!--<artifactId>webcam-capture-driver-ipcam</artifactId>-->
+            <!--<version>0.3.10-RC7</version>-->
+        <!--</dependency>-->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.sarxos</groupId>
+            <artifactId>webcam-capture</artifactId>
+            <version>0.3.10</version>
+            <!--<exclusions>-->
+                <!--<exclusion>-->
+                    <!--<artifactId>bridj</artifactId>-->
+                    <!--<groupId>com.nativelibs4java</groupId>-->
+                <!--</exclusion>-->
+            <!--</exclusions>-->
+        </dependency>
+        <!--<dependency>-->
+            <!--<artifactId>bridj</artifactId>-->
+            <!--<groupId>com.nativelibs4java</groupId>-->
+            <!--<version>0.7</version>-->
+            <!--<scope>system</scope>-->
+            <!--<systemPath>${project.basedir}/libs/bridj-0.6.3.jar</systemPath>-->
+        <!--</dependency>-->
+        <dependency>
+            <groupId>com.pubnub</groupId>
+            <artifactId>pubnub-debug</artifactId>
+            <version>3.7.10</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.2</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.49</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.kamranzafar</groupId>
+            <artifactId>jtar</artifactId>
+            <version>2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.14</version>
+        </dependency>
+    </dependencies>
+
+</project>

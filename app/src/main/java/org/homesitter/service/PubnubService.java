@@ -1,4 +1,4 @@
-package org.homesitter;
+package org.homesitter.service;
 
 import android.app.Service;
 import android.content.Context;
@@ -7,20 +7,21 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-import com.pubnub.api.Callback;
 import com.pubnub.api.Pubnub;
 import com.pubnub.api.PubnubError;
 import com.pubnub.api.PubnubException;
 
-import org.json.JSONArray;
-import org.json.JSONException;
+import org.homesitter.HomeSitter;
+import org.homesitter.Messages;
+import org.homesitter.R;
+import org.homesitter.model.Picture;
 import org.json.JSONObject;
 
 /**
  * Created by mtkachenko on 24/11/15.
  */
 public class PubnubService extends Service {
-    private static final String TAG = HomeSitter.TAG;
+    public static final String TAG = HomeSitter.TAG;
 
     private Pubnub pubnub;
     private String homeUuid, mainChannelId;
@@ -28,18 +29,22 @@ public class PubnubService extends Service {
     private boolean isConnected = false;
     private boolean isHomeConnected = false;
 
+    public void onNewPicture(Picture picture) {
+        getApplicationContext().getSettings().putLastPicture(picture);
+        notifyNewPicture(picture);
+    }
+
     public static class State {
         public final boolean isConnected;
         public final boolean isHomeConnected;
+        @Nullable
+        public final Picture lastPicture;
 
-        public State(boolean isConnected, boolean isHomeConnected) {
+        public State(boolean isConnected, boolean isHomeConnected, @Nullable Picture lastPicture) {
             this.isConnected = isConnected;
             this.isHomeConnected = isHomeConnected;
+            this.lastPicture = lastPicture;
         }
-    }
-
-    private State getState() {
-        return new State(isConnected, isHomeConnected);
     }
 
     public static Intent intent(Context context) {
@@ -60,36 +65,66 @@ public class PubnubService extends Service {
         pubnub.setUUID("client_1");
 
         subscribe(mainChannelId);
+        requestCheckIsHomeConnected();
+        subscribeForPresence();
+    }
+
+    public void requestPicture() {
+        JSONObject message = Messages.newPictureRequest();
+        pubnub.publish(mainChannelId, message, new BasePubnubCallback(this) {
+            @Override
+            public void errorCallback(String channel, PubnubError error) {
+                super.errorCallback(channel, error);
+                notifyStateChanged("Cannot request new picture: " + error.getErrorString());
+            }
+        });
+    }
+
+    private void subscribeForPresence() {
+        try {
+            pubnub.presence(mainChannelId, new PresenceCallback(this));
+        } catch (PubnubException e) {
+            notifyStateChanged(e.getMessage());
+        }
     }
 
     private void subscribe(String mainChannelId) {
         try {
-            pubnub.subscribe(mainChannelId, new Callback() {
-
-                @Override
-                public void connectCallback(String channel, Object message) {
-                    isConnected = true;
-                    notifyStateChanged(String.valueOf(message));
-                }
-
-                @Override
-                public void errorCallback(String channel, PubnubError error) {
-                    isConnected = false;
-                    notifyStateChanged(error.getErrorString());
-                }
-
-                @Override
-                public void disconnectCallback(String channel, Object message) {
-                    isConnected = false;
-                }
-
-                @Override
-                public void reconnectCallback(String channel, Object message) {
-                    isConnected = true;
-                }
-            });
+            pubnub.subscribe(mainChannelId, new SubscribeCallback(this));
         } catch (PubnubException e) {
             notifyStateChanged(e.getMessage());
+        }
+    }
+
+    private void requestCheckIsHomeConnected() {
+        pubnub.hereNow(mainChannelId, false, true, new HomeConnectedCallback(this));
+    }
+
+    public void requestRefreshState() {
+        requestCheckIsHomeConnected();
+        notifyStateChanged(null);
+    }
+
+    private State getState() {
+        Picture lastPicture = getApplicationContext().getSettings().getLastPicture();
+        return new State(isConnected, isHomeConnected, lastPicture);
+    }
+
+    void setConnected(boolean connected) {
+        boolean stateChanged = isConnected == connected;
+        isConnected = connected;
+
+        if (stateChanged) {
+            notifyStateChanged(null);
+        }
+    }
+
+    void setHomeConnected(boolean connected) {
+        boolean stateChanged = (isHomeConnected != connected);
+        isHomeConnected = connected;
+
+        if (stateChanged) {
+            notifyStateChanged(null);
         }
     }
 
@@ -98,26 +133,20 @@ public class PubnubService extends Service {
         getApplicationContext().getEventBus().post(event);
     }
 
+    private void notifyNewPicture(Picture picture) {
+        getApplicationContext().getSettings().putLastPicture(picture);
+        notifyStateChanged(null);
+//        NewPictureEvent event = new NewPictureEvent(picture);
+//        getApplicationContext().getEventBus().post(event);
+    }
+
     @Override
     public HomeSitter getApplicationContext() {
         return (HomeSitter) super.getApplicationContext();
     }
 
-    private boolean isHomeOnline(Object message) throws JSONException {
-        if (!(message instanceof JSONObject)) {
-            throw new JSONException("Not JSON");
-        }
-
-        JSONObject update = (JSONObject) message;
-        JSONArray uuids = update.getJSONArray("uuids");
-
-        for (int i = 0; i < uuids.length(); i++) {
-            if (homeUuid.equals(uuids.getString(i))) {
-                return true;
-            }
-        }
-
-        return false;
+    String getHomeUuid() {
+        return homeUuid;
     }
 
     @Override

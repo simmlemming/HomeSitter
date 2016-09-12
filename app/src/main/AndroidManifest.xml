@@ -19,7 +19,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".PubnubService" />
+        <service android:name=".service.PubnubService" />
     </application>
 
 </manifest>
