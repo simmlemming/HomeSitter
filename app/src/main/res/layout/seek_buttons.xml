@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#6666ffff"
+    android:orientation="vertical">
+
+    <Button
+        style="@style/seekButton"
+        android:layout_gravity="left|top"
+        android:layout_marginLeft="12dp"
+        android:layout_marginTop="12dp"
+        android:text="+D" />
+
+    <Button
+        style="@style/seekButton"
+        android:layout_gravity="left|center_vertical"
+        android:layout_marginLeft="12dp"
+        android:text="+H" />
+
+    <Button
+        style="@style/seekButton"
+        android:layout_gravity="left|bottom"
+        android:layout_marginBottom="12dp"
+        android:layout_marginLeft="12dp"
+        android:text="+M" />
+
+</FrameLayout>

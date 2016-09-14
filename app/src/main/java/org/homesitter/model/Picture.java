@@ -6,6 +6,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 
 /**
  * Created by mtkachenko on 09/09/16.
@@ -35,6 +36,11 @@ public class Picture implements Serializable {
         Picture other = (Picture) o;
         return this.link.equals(other.link)
                 && this.timeMs == other.timeMs;
+    }
+
+    @Override
+    public String toString() {
+        return new SimpleDateFormat("MMM d',' HH:mm:ss").format(timeMs);
     }
 
     @Override

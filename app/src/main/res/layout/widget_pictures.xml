@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <org.homesitter.widget.ImageView3by4
+        android:id="@+id/last_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#666666"
+        android:scaleType="centerCrop"
+        android:visibility="visible" />
+
+    <FrameLayout
+        android:id="@+id/seek_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/minus_day"
+            style="@style/seekButton"
+            android:layout_gravity="left|top"
+            android:layout_marginLeft="12dp"
+            android:layout_marginTop="12dp"
+            android:text="&lt;&lt;&lt;" />
+
+        <Button
+            android:id="@+id/minus_hour"
+            style="@style/seekButton"
+            android:layout_gravity="left|center_vertical"
+            android:layout_marginLeft="12dp"
+            android:text="&lt;&lt;" />
+
+        <Button
+            android:id="@+id/minus_minute"
+            style="@style/seekButton"
+            android:layout_gravity="left|bottom"
+            android:layout_marginBottom="12dp"
+            android:layout_marginLeft="12dp"
+            android:text="&lt;" />
+
+        <Button
+            android:id="@+id/plus_day"
+            style="@style/seekButton"
+            android:layout_gravity="right|top"
+            android:layout_marginRight="12dp"
+            android:layout_marginTop="12dp"
+            android:text="&gt;&gt;&gt;" />
+
+        <Button
+            android:id="@+id/plus_hour"
+            style="@style/seekButton"
+            android:layout_gravity="right|center_vertical"
+            android:layout_marginRight="12dp"
+            android:text="&gt;&gt;" />
+
+        <Button
+            android:id="@+id/plus_minute"
+            style="@style/seekButton"
+            android:layout_gravity="right|bottom"
+            android:layout_marginBottom="12dp"
+            android:layout_marginRight="12dp"
+            android:text="&gt;" />
+
+        <Button
+            android:id="@+id/done"
+            style="@style/seekButton"
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_marginBottom="12dp"
+            android:text="" />
+    </FrameLayout>
+</FrameLayout>

@@ -33,10 +33,12 @@ public class HistoryCallback extends BasePubnubCallback {
             pubnubService.notifyStateChanged(e.getCause().getMessage());
         }
 
+        Picture lastPicture = null;
         if (!pictures.isEmpty()) {
-            Picture lastPicture = pictures.get(pictures.size() - 1);
-            pubnubService.onNewPicture(lastPicture);
+            lastPicture = pictures.get(pictures.size() - 1);
         }
+
+        pubnubService.onNewPicture(lastPicture);
     }
 
     @Override

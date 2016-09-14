@@ -76,6 +76,17 @@ public class PubnubService extends Service {
         }
     }
 
+    public void requestPictureAt(long timeMs) {
+        pubnub.history(mainChannelId,
+                timeMs * 10000, // start time
+                -1L, // end time
+                10, // page size
+                false, // reverse
+                false, // include timetoken
+                new HistoryCallback(this));
+
+    }
+
     public void requestNewPicture() {
         if (isPictureRequestInProgress) {
             return;
@@ -96,7 +107,7 @@ public class PubnubService extends Service {
         notifyStateChanged(null);
     }
 
-    public void onNewPicture(Picture picture) {
+    public void onNewPicture(@Nullable Picture picture) {
         isPictureRequestInProgress = false;
         lastPicture = picture;
         getApplicationContext().getStorage().putState(currentState());

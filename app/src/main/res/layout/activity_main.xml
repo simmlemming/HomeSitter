@@ -7,12 +7,10 @@
     android:orientation="vertical"
     tools:context="org.homesitter.MainActivity">
 
-    <org.homesitter.widget.ImageView3by4
-        android:id="@+id/last_image"
+    <org.homesitter.widget.PicturesWidget
+        android:id="@+id/pictures"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#666666"
-        android:scaleType="centerCrop" />
+        android:layout_height="wrap_content" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -42,10 +40,10 @@
             android:id="@+id/state"
             android:layout_width="wrap_content"
             android:layout_height="32dp"
-            android:minWidth="48dp"
             android:layout_gravity="right"
             android:background="@color/ok"
             android:gravity="center"
+            android:minWidth="48dp"
             android:paddingLeft="8dp"
             android:paddingRight="8dp"
             android:textColor="@color/white"
