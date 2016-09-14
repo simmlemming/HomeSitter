@@ -29,7 +29,7 @@ public class PubnubService extends Service {
     private Pubnub pubnub;
     private String homeUuid, mainChannelId;
 
-    private Connectivity connectivity = new Connectivity(Connectivity.State.CONNECTING, Connectivity.State.DISCONNECTED);
+    private Connectivity connectivity = new Connectivity(Connectivity.State.UNKNOWN, Connectivity.State.UNKNOWN);
 
     public static Intent intent(Context context) {
         return new Intent(context, PubnubService.class);

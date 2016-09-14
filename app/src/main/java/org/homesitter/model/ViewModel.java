@@ -12,7 +12,8 @@ import java.util.Date;
  * Created by mtkachenko on 14/09/16.
  */
 public class ViewModel {
-    public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM d',' HH:mm:ss");
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM dd',' HH:mm:ss");
+    private static final String DATE_PLACEHOLDER = "--- --, --:--:--";
 
     public final Picture picture;
     public final String timeText;
@@ -42,7 +43,7 @@ public class ViewModel {
 
     private ViewModel(long timeMs, Connectivity connectivity, boolean takePictureButtonEnabled) {
         this.picture = null;
-        this.timeText = DATE_FORMAT.format(new Date(timeMs));
+        this.timeText = timeMs == 0 ? DATE_PLACEHOLDER : DATE_FORMAT.format(new Date(timeMs));
         this.takePictureButtonEnabled = takePictureButtonEnabled;
 
         int[] state = stateParams(connectivity);
@@ -59,8 +60,8 @@ public class ViewModel {
                 return forHomeState(connectivity.home);
 
             default:
-            case CONNECTING:
-                return new int[] {R.color.neutral, R.string.status_connecting};
+            case UNKNOWN:
+                return new int[] {R.color.neutral, R.string.status_unknown};
         }
     }
 
@@ -73,8 +74,8 @@ public class ViewModel {
                 return new int[] {R.color.ok, R.string.status_ok};
 
             default:
-            case CONNECTING:
-                return new int[] {R.color.neutral, R.string.status_connecting};
+            case UNKNOWN:
+                return new int[] {R.color.neutral, R.string.status_unknown};
         }
     }
 }

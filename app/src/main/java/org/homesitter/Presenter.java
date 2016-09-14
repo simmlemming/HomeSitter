@@ -28,7 +28,7 @@ public class Presenter {
 
     public ViewModel restoreState() {
         lastLivePicture = application.getStorage().restorePicture();
-        return ViewModel.withValues(lastLivePicture, 0, new Connectivity(Connectivity.State.CONNECTING, Connectivity.State.DISCONNECTED), pictureRequestIsInProgress);
+        return ViewModel.withValues(lastLivePicture, 0, new Connectivity(Connectivity.State.UNKNOWN, Connectivity.State.DISCONNECTED), pictureRequestIsInProgress);
     }
 
     public ViewModel requestCurrentState(PubnubService service) {

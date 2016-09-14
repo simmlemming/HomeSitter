@@ -2,6 +2,6 @@
     <string name="app_name">HomeSitter</string>
     <string name="status_ok">OK</string>
     <string name="status_disconnected">Disconnected</string>
-    <string name="status_connecting">-</string>
+    <string name="status_unknown">-</string>
     <string name="status_home_disconnected">Home disconnected</string>
 </resources>

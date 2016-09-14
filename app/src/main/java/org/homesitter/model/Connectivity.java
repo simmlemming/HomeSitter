@@ -6,7 +6,7 @@ package org.homesitter.model;
 public class Connectivity {
     public enum State {
         DISCONNECTED,
-        CONNECTING,
+        UNKNOWN,
         CONNECTED;
 
         public static State fromBoolean(boolean connected) {
