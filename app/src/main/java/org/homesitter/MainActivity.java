@@ -4,27 +4,20 @@ import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import org.homesitter.model.Picture;
-import org.homesitter.model.State;
+import org.homesitter.model.ViewModel;
 import org.homesitter.service.PubnubService;
 import org.homesitter.widget.PicturesWidget;
 
-import java.text.SimpleDateFormat;
-
 public class MainActivity extends AppCompatActivity {
-    public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM d',' HH:mm:ss");
-
     private ImageView lastImageView;
     private View takePictureView;
     private TextView stateView, timeView;
@@ -33,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
     private PubnubService pubnubService;
     private ServiceConnection serviceConnection = new PubnubServiceConnection();
 
-    private long pictureTimeMs = -1;
+    private Presenter presenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,77 +39,69 @@ public class MainActivity extends AppCompatActivity {
         timeView = (TextView) findViewById(R.id.time);
         picturesWidget = (PicturesWidget) findViewById(R.id.pictures);
 
+        presenter = new Presenter(getApplicationContext());
+
         picturesWidget.setOnSeekListener(new PicturesWidget.OnSeekListener() {
 
             @Override
             public void onSeek(long ms) {
-                Log.i(HomeSitter.TAG, getClass().getSimpleName() + ".onSeek() called with: " + "ms = [" + ms + "]");
-                pictureTimeMs += ms;
-                updateTimeView(pictureTimeMs);
+//                pictureTimeMs += ms;
+//                updateTimeView(pictureTimeMs);
             }
 
             @Override
             public void onSeekDone() {
-                Log.i(HomeSitter.TAG, getClass().getSimpleName() + ".onSeekDone() called with: " + "");
-                pubnubService.requestPictureAt(pictureTimeMs);
+//                pubnubService.requestPictureAt(pictureTimeMs);
             }
         });
 
         takePictureView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                pubnubService.requestNewPicture();
+                presenter.requestLivePicture(pubnubService);
             }
         });
 
         getApplicationContext().getEventBus().register(this);
+        getApplicationContext().getEventBus().register(presenter);
         bindService(PubnubService.intent(this), serviceConnection, BIND_AUTO_CREATE);
+
+        ViewModel lastViewModel = presenter.restoreState();
+        updateView(lastViewModel);
     }
 
     @SuppressWarnings("unused")
-    public void onEventMainThread(PubnubService.StateUpdatedEvent event) {
-        if (!TextUtils.isEmpty(event.userFriendlyMessage)) {
-            Snackbar.make(lastImageView, event.userFriendlyMessage, Snackbar.LENGTH_SHORT).show();
-        }
-
-        updateUi(event.state);
+    public void onEventMainThread(ViewModel viewModel) {
+        updateView(viewModel);
     }
 
-    private void loadPicture(@Nullable Picture picture) {
-        Log.i(HomeSitter.TAG, getClass().getSimpleName() + ".loadPicture() called with: " + "picture = [" + picture + "]");
-        if (picture == null) {
+    private void updateView(ViewModel viewModel) {
+        if (viewModel.picture == null) {
             lastImageView.setScaleType(ImageView.ScaleType.CENTER);
             lastImageView.setImageResource(R.drawable.ic_launcher_icon);
-            updateTimeView(pictureTimeMs);
         } else {
             lastImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             Picasso.with(this)
-                    .load(picture.link)
+                    .load(viewModel.picture.link)
                     .into(lastImageView);
-
-            updateTimeView(picture.timeMs);
-            pictureTimeMs = picture.timeMs;
         }
-    }
 
-    private void updateTimeView(long timeMs) {
-        timeView.setText(DATE_FORMAT.format(timeMs));
-    }
+        timeView.setText(viewModel.timeText);
+        takePictureView.setEnabled(!viewModel.takePictureButtonEnabled);
 
-    private void updateUi(State state) {
-        UiState uiState = UiState.forState(state);
+        stateView.setBackgroundColor(getResources().getColor(viewModel.stateColorResId));
+        stateView.setText(viewModel.stateTextResId);
 
-        stateView.setText(getString(uiState.textResId));
-        stateView.setBackgroundColor(getResources().getColor(uiState.colorResId));
-
-        takePictureView.setEnabled(!state.isPictureRequestInProgress);
-
-        loadPicture(state.lastPicture);
+        if (!TextUtils.isEmpty(viewModel.userFriendlyErrorMessage)) {
+            Snackbar.make(lastImageView, viewModel.userFriendlyErrorMessage, Snackbar.LENGTH_SHORT).show();
+        }
     }
 
     @Override
     protected void onDestroy() {
+        presenter.saveState();
         getApplicationContext().getEventBus().unregister(this);
+        getApplicationContext().getEventBus().unregister(presenter);
         unbindService(serviceConnection);
         super.onDestroy();
     }
@@ -131,7 +116,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             pubnubService = ((PubnubService.LocalBinder) service).service();
-            pubnubService.requestRefreshState();
+            presenter.requestCurrentState(pubnubService);
+            presenter.requestLastPictureIfNeeded(pubnubService);
         }
 
         @Override

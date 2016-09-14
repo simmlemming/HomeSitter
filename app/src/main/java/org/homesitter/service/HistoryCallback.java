@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Created by mtkachenko on 12/09/16.
  */
-public class HistoryCallback extends BasePubnubCallback {
+public abstract class HistoryCallback extends BasePubnubCallback {
 
     HistoryCallback(@NonNull PubnubService pubnubService) {
         super(pubnubService);
@@ -30,7 +30,7 @@ public class HistoryCallback extends BasePubnubCallback {
         } catch (Messages.MalformedMessageException e) {
             pictures = Collections.emptyList();
             Log.e(PubnubService.TAG, "Cannot parse history", e);
-            pubnubService.notifyStateChanged(e.getCause().getMessage());
+            onError(e.getCause().getMessage());
         }
 
         Picture lastPicture = null;
@@ -38,12 +38,15 @@ public class HistoryCallback extends BasePubnubCallback {
             lastPicture = pictures.get(pictures.size() - 1);
         }
 
-        pubnubService.onNewPicture(lastPicture);
+        onSuccess(lastPicture);
     }
 
     @Override
     public void errorCallback(String channel, PubnubError error) {
         super.errorCallback(channel, error);
-        pubnubService.notifyStateChanged(error.getErrorString());
+        onError(error.getErrorString());
     }
+
+    protected abstract void onSuccess(Picture picture);
+    protected abstract void onError(String userFriendlyMessage);
 }

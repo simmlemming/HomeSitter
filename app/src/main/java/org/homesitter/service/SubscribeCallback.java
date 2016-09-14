@@ -27,7 +27,7 @@ class SubscribeCallback extends BasePubnubCallback {
             Picture picture = null;
             try {
                 picture = Picture.fromMessage((JSONObject) message);
-                pubnubService.onNewPicture(picture);
+                pubnubService.onLivePictureReceived(picture);
             } catch (JSONException e) {
                 Log.e(HomeSitter.TAG, "Cannot parse picture new message", e);
             }

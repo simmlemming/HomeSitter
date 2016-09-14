@@ -3,7 +3,7 @@ package org.homesitter;
 import android.content.Context;
 import android.util.Log;
 
-import org.homesitter.model.State;
+import org.homesitter.model.Picture;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 
 /**
  * Created by mtkachenko on 12/09/16.
@@ -23,35 +24,44 @@ public class Storage {
         this.context = context;
     }
 
-    public State getState() {
+    public void savePicture(Picture picture) {
+        saveValue("last_picture", picture);
+    }
+
+    public Picture restorePicture() {
+        return restoreValue("last_picture", Picture.class);
+    }
+
+    private <T extends Serializable> T restoreValue(String fileName, Class<T> clazz) {
         FileInputStream fis = null;
         ObjectInputStream is = null;
-        State state = null;
+        T value = null;
 
         try {
-            fis = context.openFileInput("last_state");
+            fis = context.openFileInput(fileName);
             is = new ObjectInputStream(fis);
-            state = (State) is.readObject();
+            Object o = is.readObject();
+            value = clazz.cast(o);
         } catch (IOException | ClassNotFoundException e) {
-            state = null;
+            value = null;
             Log.e(HomeSitter.TAG, null, e);
         } finally {
             closeStream(is);
             closeStream(fis);
         }
 
-        return state;
+        return value;
     }
 
-    public void putState(State state) {
+    private void saveValue(String fileName, Serializable value) {
         FileOutputStream fos = null;
         ObjectOutputStream os = null;
 
         try {
-            fos = context.openFileOutput("last_state", Context.MODE_PRIVATE);
+            fos = context.openFileOutput(fileName, Context.MODE_PRIVATE);
             os = new ObjectOutputStream(fos);
 
-            os.writeObject(state);
+            os.writeObject(value);
 
             os.flush();
             fos.flush();

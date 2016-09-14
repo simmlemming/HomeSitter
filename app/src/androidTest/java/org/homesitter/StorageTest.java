@@ -5,13 +5,11 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.homesitter.model.Picture;
-import org.homesitter.model.State;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.homesitter.service.PubnubService.ConnectionState.CONNECTED;
-import static org.homesitter.service.PubnubService.ConnectionState.DISCONNECTED;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Created by mtkachenko on 12/09/16.
@@ -20,28 +18,25 @@ import static org.junit.Assert.assertEquals;
 public class StorageTest {
 
     @Test
-    public void getState_withPicture() {
+    public void restorePicture_withPicture() {
         Picture pic = new Picture("http://last.pic/wwefw.jpg", 987293782762L);
-        State state = new State(true, CONNECTED, DISCONNECTED, pic);
 
         Storage storage = getStorage();
 
-        storage.putState(state);
-        State restoredState = storage.getState();
+        storage.savePicture(pic);
+        Picture restoredPic = storage.restorePicture();
 
-        assertEquals(state, restoredState);
+        assertEquals(pic, restoredPic);
     }
 
     @Test
-    public void getState_withoutPicture() {
-        State state = new State(false, CONNECTED, DISCONNECTED, null);
-
+    public void restorePicture_withoutPicture() {
         Storage storage = getStorage();
 
-        storage.putState(state);
-        State restoredState = storage.getState();
+        storage.savePicture(null);
+        Picture restoredPic = storage.restorePicture();
 
-        assertEquals(state, restoredState);
+        assertNull(restoredPic);
     }
 
     @NonNull

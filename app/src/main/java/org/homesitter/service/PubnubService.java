@@ -5,8 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.pubnub.api.Callback;
 import com.pubnub.api.Pubnub;
 import com.pubnub.api.PubnubError;
 import com.pubnub.api.PubnubException;
@@ -14,11 +16,9 @@ import com.pubnub.api.PubnubException;
 import org.homesitter.HomeSitter;
 import org.homesitter.Messages;
 import org.homesitter.R;
+import org.homesitter.model.Connectivity;
 import org.homesitter.model.Picture;
-import org.homesitter.model.State;
 import org.json.JSONObject;
-
-import java.util.Calendar;
 
 /**
  * Created by mtkachenko on 24/11/15.
@@ -29,11 +29,7 @@ public class PubnubService extends Service {
     private Pubnub pubnub;
     private String homeUuid, mainChannelId;
 
-    private ConnectionState connectionState = ConnectionState.CONNECTING;
-    private ConnectionState homeConnectionState = ConnectionState.DISCONNECTED;
-
-    private Picture lastPicture;
-    private boolean isPictureRequestInProgress = false;
+    private Connectivity connectivity = new Connectivity(Connectivity.State.CONNECTING, Connectivity.State.DISCONNECTED);
 
     public static Intent intent(Context context) {
         return new Intent(context, PubnubService.class);
@@ -51,75 +47,56 @@ public class PubnubService extends Service {
         pubnub = new Pubnub(pubKey, subKey, true);
         pubnub.setUUID("client_1");
 
-        State lastState = getApplicationContext().getStorage().getState();
-        if (lastState != null) {
-            lastPicture = lastState.lastPicture;
-        }
-
         subscribe(mainChannelId);
         requestCheckIsHomeConnected();
         subscribeForPresence();
-        requestLastPictureIfNeeded();
     }
 
-    public void requestLastPictureIfNeeded() {
-        HomeSitter.HomeSitterSettings settings = getApplicationContext().getSettings();
+    public void requestLastPicture() {
+        requestPictureAt(System.currentTimeMillis(), new HistoryCallback(this) {
+            @Override
+            protected void onSuccess(Picture picture) {
+                onLivePictureReceived(picture);
+            }
 
-        long picturesIntervalMs = settings.getPicturesIntervalMs();
-        long currentTimeMs = Calendar.getInstance().getTimeInMillis();
-
-        boolean haveRecentPicture = (lastPicture != null) // Have last picture
-                                    && (currentTimeMs - lastPicture.timeMs) < picturesIntervalMs; // It's recent
-
-        if (!haveRecentPicture) {
-            pubnub.history(mainChannelId, false, new HistoryCallback(this));
-        }
+            @Override
+            protected void onError(String userFriendlyMessage) {
+                notifyNewPictureRequestFailed(userFriendlyMessage);
+            }
+        });
     }
 
-    public void requestPictureAt(long timeMs) {
+    private void requestPictureAt(long timeMs, Callback callback) {
         pubnub.history(mainChannelId,
                 timeMs * 10000, // start time
                 -1L, // end time
                 10, // page size
                 false, // reverse
                 false, // include timetoken
-                new HistoryCallback(this));
-
+                callback);
     }
 
-    public void requestNewPicture() {
-        if (isPictureRequestInProgress) {
-            return;
-        }
-
-        isPictureRequestInProgress = true;
-
+    public void requestLivePicture() {
         JSONObject message = Messages.newPictureRequest();
         pubnub.publish(mainChannelId, message, new BasePubnubCallback(this) {
             @Override
             public void errorCallback(String channel, PubnubError error) {
                 super.errorCallback(channel, error);
-                isPictureRequestInProgress = false;
-                notifyStateChanged("Cannot request new picture: " + error.getErrorString());
+                notifyNewPictureRequestFailed(error.getErrorString());
             }
         });
-
-        notifyStateChanged(null);
     }
 
-    public void onNewPicture(@Nullable Picture picture) {
-        isPictureRequestInProgress = false;
-        lastPicture = picture;
-        getApplicationContext().getStorage().putState(currentState());
-
-        notifyStateChanged(null);
+    public void onLivePictureReceived(@NonNull Picture picture) {
+        NewLivePictureReceivedEvent event = new NewLivePictureReceivedEvent(picture);
+        getApplicationContext().getEventBus().post(event);
     }
 
     private void subscribeForPresence() {
         try {
             pubnub.presence(mainChannelId, new PresenceCallback(this));
         } catch (PubnubException e) {
-            notifyStateChanged(e.getMessage());
+            notifyGeneralFail(e.getMessage());
         }
     }
 
@@ -127,7 +104,7 @@ public class PubnubService extends Service {
         try {
             pubnub.subscribe(mainChannelId, new SubscribeCallback(this));
         } catch (PubnubException e) {
-            notifyStateChanged(e.getMessage());
+            notifyGeneralFail(e.getMessage());
         }
     }
 
@@ -135,38 +112,42 @@ public class PubnubService extends Service {
         pubnub.hereNow(mainChannelId, false, true, new HomeConnectedCallback(this));
     }
 
-    public void requestRefreshState() {
+    public void requestConnectivityStateRefresh() {
         requestCheckIsHomeConnected();
-        notifyStateChanged(null);
-    }
-
-    private State currentState() {
-        return new State(isPictureRequestInProgress, connectionState, homeConnectionState, lastPicture);
     }
 
     void setConnected(boolean connected) {
-        ConnectionState newState = ConnectionState.fromBoolean(connected);
-        boolean stateChanged = connectionState != newState;
-
-        connectionState = newState;
-
-        if (stateChanged) {
-            notifyStateChanged(null);
-        }
+        Connectivity newConnectivity = new Connectivity(Connectivity.State.fromBoolean(connected), this.connectivity.home);
+        setAndNotifyIfChanged(newConnectivity);
     }
 
     void setHomeConnected(boolean connected) {
-        ConnectionState newState = ConnectionState.fromBoolean(connected);
-        boolean stateChanged = homeConnectionState != newState;
-        homeConnectionState = newState;
+        Connectivity newConnectivity = new Connectivity(connectivity.self, Connectivity.State.fromBoolean(connected));
+        setAndNotifyIfChanged(newConnectivity);
+    }
+
+    private void setAndNotifyIfChanged(Connectivity newConnectivity) {
+        boolean stateChanged = !connectivity.equals(newConnectivity);
+
+        connectivity = newConnectivity;
 
         if (stateChanged) {
-            notifyStateChanged(null);
+            notifyConnectivityChanged();
         }
     }
 
-    void notifyStateChanged(String userFriendlyMessage) {
-        StateUpdatedEvent event = new StateUpdatedEvent(currentState(), userFriendlyMessage);
+    private void notifyConnectivityChanged() {
+        ConnectivityChangedEvent event = new ConnectivityChangedEvent(connectivity);
+        getApplicationContext().getEventBus().post(event);
+    }
+
+    private void notifyGeneralFail(String userFriendlyErrorMessage) {
+        GeneralFailureEvent event = new GeneralFailureEvent(userFriendlyErrorMessage);
+        getApplicationContext().getEventBus().post(event);
+    }
+
+    private void notifyNewPictureRequestFailed(String userFriendlyErrorMessage) {
+        LivePictureRequestFailedEvent event = new LivePictureRequestFailedEvent(userFriendlyErrorMessage);
         getApplicationContext().getEventBus().post(event);
     }
 
@@ -198,24 +179,48 @@ public class PubnubService extends Service {
         }
     }
 
-    public static class StateUpdatedEvent {
-        public final String userFriendlyMessage;
-        public final State state;
+    public class NewLivePictureReceivedEvent {
+        public final PubnubService service;
+        public final Picture picture;
 
-
-        public StateUpdatedEvent(State state, String userFriendlyMessage) {
-            this.userFriendlyMessage = userFriendlyMessage;
-            this.state = state;
+        public NewLivePictureReceivedEvent(Picture picture) {
+            this.service = PubnubService.this;
+            this.picture = picture;
         }
     }
 
-    public enum ConnectionState {
-        DISCONNECTED,
-        CONNECTING,
-        CONNECTED;
+    public abstract class RequestFailedEvent {
+        public final PubnubService service;
+        public final String userFriendlyErrorMessage;
 
-        public static ConnectionState fromBoolean(boolean connected) {
-            return connected ? CONNECTED : DISCONNECTED;
+        protected RequestFailedEvent(String userFriendlyErrorMessage) {
+            this.userFriendlyErrorMessage = userFriendlyErrorMessage;
+            this.service = PubnubService.this;
         }
+    }
+
+    public class GeneralFailureEvent extends RequestFailedEvent {
+
+        protected GeneralFailureEvent(String userFriendlyErrorMessage) {
+            super(userFriendlyErrorMessage);
+        }
+    }
+
+    public class LivePictureRequestFailedEvent extends RequestFailedEvent {
+        private LivePictureRequestFailedEvent(String userFriendlyErrorMessage) {
+            super(userFriendlyErrorMessage);
+        }
+    }
+
+    public static class ConnectivityChangedEvent {
+        public final Connectivity connectivity;
+
+        public ConnectivityChangedEvent(Connectivity connectivity) {
+            this.connectivity = connectivity;
+        }
+    }
+
+    public Connectivity getCurrentConnectivity() {
+        return connectivity;
     }
 }
