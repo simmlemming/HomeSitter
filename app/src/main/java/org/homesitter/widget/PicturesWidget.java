@@ -3,6 +3,7 @@ package org.homesitter.widget;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 
 import org.homesitter.R;
@@ -93,10 +94,33 @@ public class PicturesWidget extends FrameLayout implements View.OnClickListener 
 
     private void toggleSeekButtons() {
         if (seekButtonsBlock.getVisibility() == View.VISIBLE) {
-            seekButtonsBlock.setVisibility(View.GONE);
+            hideSeekButtons();
         } else {
-            seekButtonsBlock.setVisibility(View.VISIBLE);
+            showSeekButtons();
         }
+    }
+
+    private void showSeekButtons() {
+        seekButtonsBlock.setVisibility(View.VISIBLE);
+        seekButtonsBlock.animate()
+                .setDuration(150)
+                .alpha(1)
+                .setInterpolator(new DecelerateInterpolator())
+                .start();
+    }
+
+    private void hideSeekButtons() {
+        seekButtonsBlock.animate()
+                .setDuration(150)
+                .alpha(0)
+                .setInterpolator(new DecelerateInterpolator())
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        seekButtonsBlock.setVisibility(View.GONE);
+                    }
+                })
+                .start();
     }
 
     public void setOnSeekListener(OnSeekListener listener) {
