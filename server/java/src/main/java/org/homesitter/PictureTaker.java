@@ -40,7 +40,7 @@ public class PictureTaker {
         }
 
         if (webcam.isOpen()) {
-            throw new IllegalStateException("Webcam already open");
+            throw new CannotTakePictureException("Webcam already open");
         }
 
         BufferedImage image = null;

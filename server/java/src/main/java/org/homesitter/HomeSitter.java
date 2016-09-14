@@ -51,6 +51,8 @@ public class HomeSitter {
             Log.e(e);
         } catch (PubnubException e) {
             Log.e(e);
+        } catch (RuntimeException e) {
+            Log.e(e); // To keep pubnub subscribed no matter what
         }
     }
 }
