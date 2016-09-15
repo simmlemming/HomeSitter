@@ -12,6 +12,14 @@ import java.util.Date;
  */
 public class Messages {
 
+    public static int getCameraIndexFromNewPictureRequest(Object message) {
+        if (!(message instanceof JSONObject)) {
+            return 0;
+        }
+
+        return ((JSONObject)message).optInt("camera_index", 0);
+    }
+
     public static boolean isNewPictureRequest(Object message) {
         if (!(message instanceof JSONObject)) {
             return false;

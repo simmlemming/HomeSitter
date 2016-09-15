@@ -11,7 +11,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.*;
+import java.util.List;
 
 /**
  * Created by mtkachenko on 11/09/16.
@@ -26,15 +27,20 @@ public class PictureTaker {
             super(cause);
         }
     }
-    private static final SimpleDateFormat FILE_NAME_FORMAT = new SimpleDateFormat("YYYY-MM-dd-HH-mm-ss'.jpg'");
+    private static final SimpleDateFormat FILE_NAME_FORMAT = new SimpleDateFormat("YYYY-MM-dd-HH-mm-ss-");
 
-    public String takePicture() throws CannotTakePictureException {
-        String fileName = FILE_NAME_FORMAT.format(new Date());
+    public String takePicture(int cameraIndex) throws CannotTakePictureException {
+        String fileName = FILE_NAME_FORMAT.format(new Date()) + cameraIndex + ".jpg";
 
 
         Webcam webcam;
         try {
-            webcam = Webcam.getDefault();
+            List<Webcam> webcams = Webcam.getWebcams();
+            if (webcams.size() <= cameraIndex) {
+                throw new IllegalArgumentException("Only " + webcams.size() + " cameras detected, but requested camera #" + cameraIndex);
+            }
+
+            webcam = webcams.get(cameraIndex);
         } catch (RuntimeException e) {
             throw new CannotTakePictureException(e);
         }
