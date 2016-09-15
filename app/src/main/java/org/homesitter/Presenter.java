@@ -30,7 +30,7 @@ public class Presenter {
 
     public ViewModel restoreState() {
         lastLivePicture = application.getStorage().restorePicture();
-        return ViewModel.withValues(lastLivePicture, 0, new Connectivity(Connectivity.State.UNKNOWN, Connectivity.State.UNKNOWN), pictureRequestIsInProgress);
+        return ViewModel.withTimeFromPicture(lastLivePicture, new Connectivity(Connectivity.State.UNKNOWN, Connectivity.State.UNKNOWN), pictureRequestIsInProgress);
     }
 
     public void onTakePictureClick(PubnubService service) {
@@ -44,7 +44,7 @@ public class Presenter {
     public ViewModel requestCurrentState(PubnubService service) {
         service.requestConnectivityStateRefresh();
         Connectivity connectivity = service.getCurrentConnectivity();
-        return ViewModel.withValues(lastLivePicture, 0, connectivity, pictureRequestIsInProgress);
+        return ViewModel.withTimeFromPicture(lastLivePicture, connectivity, pictureRequestIsInProgress);
     }
 
     public void requestLastPictureIfNeeded(PubnubService service) {
@@ -65,7 +65,7 @@ public class Presenter {
     public void requestLivePicture(PubnubService service) {
         pictureRequestIsInProgress = true;
         service.requestLivePicture();
-        ViewModel viewModel = ViewModel.withValues(lastLivePicture, 0, service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePicture, service.getCurrentConnectivity(), pictureRequestIsInProgress);
         application.getEventBus().post(viewModel);
     }
 
@@ -73,7 +73,7 @@ public class Presenter {
         pictureRequestIsInProgress = true;
         service.requestPictureAt(seekTimeMs);
 
-        ViewModel viewModel = ViewModel.seeking(lastSeekPicture, seekTimeMs, service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        ViewModel viewModel = ViewModel.withGivenTime(lastSeekPicture, seekTimeMs, service.getCurrentConnectivity(), pictureRequestIsInProgress);
         application.getEventBus().post(viewModel);
     }
 
@@ -89,7 +89,7 @@ public class Presenter {
     public void seekTo(PubnubService service, long timeMs) {
         seekTimeMs = timeMs;
 
-        ViewModel viewModel = ViewModel.seeking(lastSeekPicture, seekTimeMs, service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        ViewModel viewModel = ViewModel.withGivenTime(lastSeekPicture, seekTimeMs, service.getCurrentConnectivity(), pictureRequestIsInProgress);
         application.getEventBus().post(viewModel);
     }
 
@@ -105,7 +105,7 @@ public class Presenter {
     public void onEventMainThread(PubnubService.NewLivePictureReceivedEvent event) {
         pictureRequestIsInProgress = false;
         lastLivePicture = event.picture;
-        ViewModel viewModel = ViewModel.withValues(lastLivePicture, 0, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePicture, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
         application.getEventBus().post(viewModel);
     }
 
@@ -113,19 +113,19 @@ public class Presenter {
     public void onEventMainThread(PubnubService.LivePictureRequestFailedEvent event) {
         pictureRequestIsInProgress = false;
         lastLivePicture = null;
-        ViewModel viewModel = ViewModel.withValues(null, 0, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        ViewModel viewModel = ViewModel.withTimeFromPicture(null, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
         application.getEventBus().post(viewModel);
     }
 
     @SuppressWarnings("unused")
     public void onEventMainThread(PubnubService.ConnectivityChangedEvent event) {
-        ViewModel viewModel = ViewModel.withValues(lastLivePicture, 0, event.connectivity, pictureRequestIsInProgress);
+        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePicture, event.connectivity, pictureRequestIsInProgress);
         application.getEventBus().post(viewModel);
     }
 
     @SuppressWarnings("unused")
     public void onEventMainThread(PubnubService.GeneralFailureEvent event) {
-        ViewModel viewModel = ViewModel.withValues(lastLivePicture, 0, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePicture, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
         viewModel.userFriendlyErrorMessage = event.userFriendlyErrorMessage;
         application.getEventBus().post(viewModel);
     }
@@ -138,7 +138,7 @@ public class Presenter {
             seekTimeMs = event.picture.timeMs;
         }
 
-        ViewModel viewModel = ViewModel.withValues(event.picture, seekTimeMs, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        ViewModel viewModel = ViewModel.withTimeFromPicture(event.picture, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
         application.getEventBus().post(viewModel);
     }
 
@@ -146,7 +146,7 @@ public class Presenter {
     public void onEventMainThread(PubnubService.PictureAtGivenTimeRequestFailedEvent event) {
         pictureRequestIsInProgress = false;
         lastSeekPicture = null;
-        ViewModel viewModel = ViewModel.withValues(null, seekTimeMs, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        ViewModel viewModel = ViewModel.withTimeFromPicture(null, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
         application.getEventBus().post(viewModel);
     }
 }

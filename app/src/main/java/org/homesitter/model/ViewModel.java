@@ -1,6 +1,5 @@
 package org.homesitter.model;
 
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.homesitter.R;
@@ -13,7 +12,7 @@ import java.util.Date;
  */
 public class ViewModel {
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM dd',' HH:mm:ss");
-    private static final String DATE_PLACEHOLDER = "--- --, --:--:--";
+    private static final String ZERO_TIME_TEXT = "--- --, --:--:--";
 
     public final Picture picture;
     public final String timeText;
@@ -23,34 +22,23 @@ public class ViewModel {
     public String userFriendlyErrorMessage;
 
 
-    public static ViewModel withValues(@Nullable Picture picture, long timeMs, Connectivity connectivity, boolean takePictureButtonEnabled) {
-        if (picture == null) {
-            return new ViewModel(timeMs, connectivity, takePictureButtonEnabled);
-        } else {
-            return new ViewModel(picture, connectivity, takePictureButtonEnabled);
-        }
+    public static ViewModel withTimeFromPicture(@Nullable Picture picture, Connectivity connectivity, boolean takePictureButtonEnabled) {
+        long timeMs = picture == null ? 0 : picture.timeMs;
+        return new ViewModel(picture, timeMs, connectivity, takePictureButtonEnabled);
     }
 
-    public static ViewModel seeking(@Nullable Picture picture, long seekTime, Connectivity connectivity, boolean takePictureButtonEnabled) {
-        return new ViewModel(picture, seekTime, connectivity, takePictureButtonEnabled);
+    public static ViewModel withGivenTime(@Nullable Picture picture, long timeMs, Connectivity connectivity, boolean takePictureButtonEnabled) {
+        return new ViewModel(picture, timeMs, connectivity, takePictureButtonEnabled);
     }
 
     private ViewModel(@Nullable Picture picture, long timeMs, Connectivity connectivity, boolean takePictureButtonEnabled) {
         this.picture = picture;
-        this.timeText = timeMs == 0 ? DATE_PLACEHOLDER : DATE_FORMAT.format(new Date(timeMs));
+        this.timeText = timeMs == 0 ? ZERO_TIME_TEXT : DATE_FORMAT.format(new Date(timeMs));
         this.takePictureButtonEnabled = takePictureButtonEnabled;
 
         int[] state = stateParams(connectivity);
         stateColorResId = state[0];
         stateTextResId = state[1];
-    }
-
-    private ViewModel(@NonNull Picture picture, Connectivity connectivity, boolean takePictureButtonEnabled) {
-        this(picture, picture.timeMs, connectivity, takePictureButtonEnabled);
-    }
-
-    private ViewModel(long timeMs, Connectivity connectivity, boolean takePictureButtonEnabled) {
-        this(null, timeMs, connectivity, takePictureButtonEnabled);
     }
 
     private int[] stateParams(Connectivity connectivity) {
