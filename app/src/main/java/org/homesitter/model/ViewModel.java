@@ -21,7 +21,6 @@ public class ViewModel {
 
     public String userFriendlyErrorMessage;
 
-
     public static ViewModel withTimeFromPicture(@Nullable Picture picture, Connectivity connectivity, boolean takePictureButtonEnabled) {
         long timeMs = picture == null ? 0 : picture.timeMs;
         return new ViewModel(picture, timeMs, connectivity, takePictureButtonEnabled);

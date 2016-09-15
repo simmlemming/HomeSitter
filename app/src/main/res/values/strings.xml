@@ -4,4 +4,5 @@
     <string name="status_disconnected">Disconnected</string>
     <string name="status_unknown">-</string>
     <string name="status_home_disconnected">Home disconnected</string>
+    <string name="setting_load_live_pictures">Load live pictures</string>
 </resources>

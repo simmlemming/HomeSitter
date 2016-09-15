@@ -39,6 +39,16 @@ public class HomeSitter extends Application {
 
         }
 
+        public boolean shouldLoadLivePictures() {
+            return getPreferences().getBoolean("load_live_pictures", true);
+        }
+
+        public void setShouldLoadLIvePictures(boolean vaule) {
+            getPreferences().edit()
+                .putBoolean("load_live_pictures", vaule)
+                .apply();
+        }
+
         // This value must be in sync with server (currently it's also hardcoded on server)
         public long getPicturesIntervalMs() {
             return getPreferences().getLong(PICTURES_INTERVAL, DEFAULT_PICTURES_INTERVAL_MS);
