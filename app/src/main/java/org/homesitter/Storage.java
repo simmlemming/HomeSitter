@@ -24,12 +24,12 @@ public class Storage {
         this.context = context;
     }
 
-    public void savePicture(Picture picture) {
-        saveValue("last_picture", picture);
+    public void savePicture(Picture picture, int cameraIndex) {
+        saveValue("last_picture_" + cameraIndex, picture);
     }
 
-    public Picture restorePicture() {
-        return restoreValue("last_picture", Picture.class);
+    public Picture restorePicture(int cameraIndex) {
+        return restoreValue("last_picture_" + cameraIndex, Picture.class);
     }
 
     private <T extends Serializable> T restoreValue(String fileName, Class<T> clazz) {

@@ -29,12 +29,13 @@ public class Messages {
         return "new_picture_request".equals(action);
     }
 
-    public static JSONObject newPicture(String fileName) throws PubnubException {
+    public static JSONObject newPicture(String fileName, int cameraIndex) throws PubnubException {
         JSONObject message = new JSONObject();
         try {
             message.put("action", "new_picture");
             message.put("link", "http://" + Keys.REMOTE_IP + "/p/" + fileName);
             message.put("time", System.currentTimeMillis());
+            message.put("camera_index", cameraIndex);
             return message;
         } catch (JSONException e) {
             throw new PubnubException("Cannot create 'New picture' message");

@@ -49,11 +49,18 @@ public class HomeSitter {
 
     private static void sendNewPicture(Pubnub pubnub, PictureTaker pictureTaker, Copier copier, Files files, int cameraIndex) {
         try {
+            Log.i("Taking picture with camera " + cameraIndex);
             String fileName = pictureTaker.takePicture(cameraIndex);
+
+            Log.i("Copying file " + fileName);
             copier.scp(fileName);
+
             files.deleteFile(fileName);
 
-            pubnub.publish(Keys.MAIN_CHANNEL, Messages.newPicture(fileName), new BasePubnubCallback("publish"));
+            JSONObject message = Messages.newPicture(fileName, cameraIndex);
+            Log.i("Publishing message ");
+            Log.i(message.toString());
+            pubnub.publish(Keys.MAIN_CHANNEL, message, new BasePubnubCallback("publish"));
         } catch (Copier.CannotCopyException e) {
             Log.e(e);
         } catch (PictureTaker.CannotTakePictureException e) {

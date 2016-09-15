@@ -19,12 +19,12 @@ public class StorageTest {
 
     @Test
     public void restorePicture_withPicture() {
-        Picture pic = new Picture("http://last.pic/wwefw.jpg", 987293782762L);
+        Picture pic = new Picture("http://last.pic/wwefw.jpg", 987293782762L, 1);
 
         Storage storage = getStorage();
 
-        storage.savePicture(pic);
-        Picture restoredPic = storage.restorePicture();
+        storage.savePicture(pic, 1);
+        Picture restoredPic = storage.restorePicture(1);
 
         assertEquals(pic, restoredPic);
     }
@@ -33,8 +33,8 @@ public class StorageTest {
     public void restorePicture_withoutPicture() {
         Storage storage = getStorage();
 
-        storage.savePicture(null);
-        Picture restoredPic = storage.restorePicture();
+        storage.savePicture(null, 0);
+        Picture restoredPic = storage.restorePicture(0);
 
         assertNull(restoredPic);
     }

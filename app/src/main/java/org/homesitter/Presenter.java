@@ -1,5 +1,7 @@
 package org.homesitter;
 
+import android.support.annotation.NonNull;
+
 import org.homesitter.model.Connectivity;
 import org.homesitter.model.Picture;
 import org.homesitter.model.ViewModel;
@@ -13,24 +15,30 @@ import java.util.Calendar;
 public class Presenter {
     private final HomeSitter application;
     private boolean pictureRequestIsInProgress = false;
-    private Picture lastLivePicture;
-    private Picture lastSeekPicture;
+    private Picture[] lastLivePictures;
+    private Picture[] lastSeekPictures;
 
     private long seekTimeMs;
+    private int cameraIndex;
 
-    public Presenter(HomeSitter application) {
+    public Presenter(HomeSitter application, int camerasCount) {
         this.application = application;
+        lastLivePictures = new Picture[camerasCount];
+        lastSeekPictures = new Picture[camerasCount];
     }
 
     public void saveState() {
-        if (lastLivePicture != null) {
-            application.getStorage().savePicture(lastLivePicture);
+        for (int i = 0; i < lastLivePictures.length; i++) {
+            application.getStorage().savePicture(lastLivePictures[i], i);
         }
     }
 
     public ViewModel restoreState() {
-        lastLivePicture = application.getStorage().restorePicture();
-        return ViewModel.withTimeFromPicture(lastLivePicture, new Connectivity(Connectivity.State.UNKNOWN, Connectivity.State.UNKNOWN), pictureRequestIsInProgress);
+        for (int i = 0; i < lastLivePictures.length; i++) {
+            lastLivePictures[i] = application.getStorage().restorePicture(i);
+        }
+
+        return ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], new Connectivity(Connectivity.State.UNKNOWN, Connectivity.State.UNKNOWN), pictureRequestIsInProgress, cameraIndex);
     }
 
     public void onTakePictureClick(PubnubService service) {
@@ -41,10 +49,37 @@ public class Presenter {
         }
     }
 
+    public void onCameraChange(PubnubService service, int cameraIndex) {
+        if (this.cameraIndex == cameraIndex) {
+            return;
+        }
+
+        this.cameraIndex = cameraIndex;
+        ViewModel viewModel;
+        if (isInSeekingMode()) {
+            viewModel = onCameraChangeInSeekMode(service, cameraIndex);
+        } else {
+            viewModel = ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
+        }
+
+        application.getEventBus().post(viewModel);
+    }
+
+    @NonNull
+    private ViewModel onCameraChangeInSeekMode(PubnubService service, int cameraIndex) {
+        if (lastSeekPictures[cameraIndex] == null) {
+            requestPictureAtSeekTime(service);
+        } else {
+            seekTimeMs = lastSeekPictures[cameraIndex].timeMs;
+        }
+
+        return ViewModel.withGivenTime(lastSeekPictures[cameraIndex], seekTimeMs, service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
+    }
+
     public ViewModel requestCurrentState(PubnubService service) {
         service.requestConnectivityStateRefresh();
         Connectivity connectivity = service.getCurrentConnectivity();
-        return ViewModel.withTimeFromPicture(lastLivePicture, connectivity, pictureRequestIsInProgress);
+        return ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], connectivity, pictureRequestIsInProgress, cameraIndex);
     }
 
     public void requestLastPictureIfNeeded(PubnubService service) {
@@ -53,45 +88,45 @@ public class Presenter {
         long picturesIntervalMs = settings.getPicturesIntervalMs();
         long currentTimeMs = Calendar.getInstance().getTimeInMillis();
 
-        boolean haveRecentPicture = (lastLivePicture != null) // Have last picture
-                && (currentTimeMs - lastLivePicture.timeMs) < picturesIntervalMs; // It's recent
+        boolean haveRecentPicture = (lastLivePictures[cameraIndex] != null) // Have last picture
+                && (currentTimeMs - lastLivePictures[cameraIndex].timeMs) < picturesIntervalMs; // It's recent
 
         if (!haveRecentPicture) {
             pictureRequestIsInProgress = true;
-            service.requestLastPicture();
+            service.requestLastPicture(cameraIndex);
         }
     }
 
     public void requestLivePicture(PubnubService service) {
         pictureRequestIsInProgress = true;
-        service.requestLivePicture();
-        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePicture, service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        service.requestLivePicture(cameraIndex);
+        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
         application.getEventBus().post(viewModel);
     }
 
     public void requestPictureAtSeekTime(PubnubService service) {
         pictureRequestIsInProgress = true;
-        service.requestPictureAt(seekTimeMs);
+        service.requestPictureAt(cameraIndex, seekTimeMs);
 
-        ViewModel viewModel = ViewModel.withGivenTime(lastSeekPicture, seekTimeMs, service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        ViewModel viewModel = ViewModel.withGivenTime(lastSeekPictures[cameraIndex], seekTimeMs, service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
         application.getEventBus().post(viewModel);
     }
 
     public void enterSeekingMode() {
-        lastSeekPicture = lastLivePicture;
-        seekTimeMs = lastLivePicture == null ? 0 : lastLivePicture.timeMs;
+        lastSeekPictures[cameraIndex] = lastLivePictures[cameraIndex];
+        seekTimeMs = lastLivePictures[cameraIndex] == null ? 0 : lastLivePictures[cameraIndex].timeMs;
     }
 
     public void exitSeekingMode(PubnubService service) {
         seekTimeMs = 0;
-        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePicture, service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
         application.getEventBus().post(viewModel);
     }
 
     public void seekTo(PubnubService service, long timeMs) {
         seekTimeMs = timeMs;
 
-        ViewModel viewModel = ViewModel.withGivenTime(lastSeekPicture, seekTimeMs, service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        ViewModel viewModel = ViewModel.withGivenTime(lastSeekPictures[cameraIndex], seekTimeMs, service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
         application.getEventBus().post(viewModel);
     }
 
@@ -110,9 +145,12 @@ public class Presenter {
         }
 
         pictureRequestIsInProgress = false;
-        lastLivePicture = event.picture;
-        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePicture, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
-        application.getEventBus().post(viewModel);
+        lastLivePictures[event.picture.cameraIndex] = event.picture;
+
+        if (cameraIndex == event.picture.cameraIndex) {
+            ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], event.service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
+            application.getEventBus().post(viewModel);
+        }
     }
 
     @SuppressWarnings("unused")
@@ -122,41 +160,52 @@ public class Presenter {
         }
 
         pictureRequestIsInProgress = false;
-        lastLivePicture = null;
-        ViewModel viewModel = ViewModel.withTimeFromPicture(null, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
-        application.getEventBus().post(viewModel);
+        lastLivePictures[event.cameraIndex] = null;
+        if (cameraIndex == event.cameraIndex) {
+            ViewModel viewModel = ViewModel.withTimeFromPicture(null, event.service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
+            application.getEventBus().post(viewModel);
+        }
     }
 
     @SuppressWarnings("unused")
     public void onEventMainThread(PubnubService.ConnectivityChangedEvent event) {
-        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePicture, event.connectivity, pictureRequestIsInProgress);
+        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], event.connectivity, pictureRequestIsInProgress, cameraIndex);
         application.getEventBus().post(viewModel);
     }
 
     @SuppressWarnings("unused")
     public void onEventMainThread(PubnubService.GeneralFailureEvent event) {
-        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePicture, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], event.service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
         viewModel.userFriendlyErrorMessage = event.userFriendlyErrorMessage;
         application.getEventBus().post(viewModel);
     }
 
     @SuppressWarnings("unused")
     public void onEventMainThread(PubnubService.PictureAtGivenTimeReceivedEvent event) {
-        pictureRequestIsInProgress = false;
-        lastSeekPicture = event.picture;
-        if (event.picture != null) {
-            seekTimeMs = event.picture.timeMs;
+        if (cameraIndex != event.cameraIndex) {
+            return;
         }
 
-        ViewModel viewModel = ViewModel.withTimeFromPicture(event.picture, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        pictureRequestIsInProgress = false;
+        lastSeekPictures[event.cameraIndex] = event.picture;
+
+        ViewModel viewModel;
+        if (event.picture == null) {
+            viewModel = ViewModel.withGivenTime(null, seekTimeMs, event.service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
+        } else {
+            seekTimeMs = event.picture.timeMs;
+            viewModel = ViewModel.withTimeFromPicture(event.picture, event.service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
+        }
         application.getEventBus().post(viewModel);
     }
 
     @SuppressWarnings("unused")
     public void onEventMainThread(PubnubService.PictureAtGivenTimeRequestFailedEvent event) {
         pictureRequestIsInProgress = false;
-        lastSeekPicture = null;
-        ViewModel viewModel = ViewModel.withTimeFromPicture(null, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
-        application.getEventBus().post(viewModel);
+        lastSeekPictures[event.cameraIndex] = null;
+        if (cameraIndex == event.cameraIndex) {
+            ViewModel viewModel = ViewModel.withTimeFromPicture(null, event.service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
+            application.getEventBus().post(viewModel);
+        }
     }
 }

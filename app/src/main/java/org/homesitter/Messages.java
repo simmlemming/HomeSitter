@@ -136,10 +136,11 @@ public class Messages {
         return false;
     }
 
-    public static JSONObject newPictureRequest() {
+    public static JSONObject newPictureRequest(int cameraIndex) {
         JSONObject request = new JSONObject();
         try {
             request.put("action", "new_picture_request");
+            request.put("camera_index", cameraIndex);
         } catch (JSONException e) {
             Log.e(PubnubService.TAG, "Cannot create new picture request", e);
         }

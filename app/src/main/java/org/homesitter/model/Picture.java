@@ -15,16 +15,19 @@ public class Picture implements Serializable {
     @NonNull
     public final String link;
     public final long timeMs;
+    public final int cameraIndex;
 
     public static Picture fromMessage(JSONObject message) throws JSONException {
         String link = message.getString("link");
         long time = message.getLong("time");
-        return new Picture(link, time);
+        int cameraIndex = message.optInt("camera_index", 0);
+        return new Picture(link, time, cameraIndex);
     }
 
-    public Picture(@NonNull String link, long timeMs) {
+    public Picture(@NonNull String link, long timeMs, int cameraIndex) {
         this.link = link;
         this.timeMs = timeMs;
+        this.cameraIndex = cameraIndex;
     }
 
     @Override
@@ -35,16 +38,17 @@ public class Picture implements Serializable {
 
         Picture other = (Picture) o;
         return this.link.equals(other.link)
-                && this.timeMs == other.timeMs;
+                && this.timeMs == other.timeMs
+                && this.cameraIndex == other.cameraIndex;
     }
 
     @Override
     public String toString() {
-        return new SimpleDateFormat("MMM d',' HH:mm:ss").format(timeMs);
+        return new SimpleDateFormat("MMM d',' HH:mm:ss").format(timeMs) + " [" + cameraIndex + "]";
     }
 
     @Override
     public int hashCode() {
-        return link.hashCode() + Long.valueOf(timeMs).intValue();
+        return link.hashCode() + Long.valueOf(timeMs).intValue() + 13 * cameraIndex;
     }
 }

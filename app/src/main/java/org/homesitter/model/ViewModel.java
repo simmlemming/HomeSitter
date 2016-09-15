@@ -18,20 +18,22 @@ public class ViewModel {
     public final String timeText;
     public final int stateColorResId, stateTextResId;
     public final boolean takePictureButtonEnabled;
+    public final int camIndex;
 
     public String userFriendlyErrorMessage;
 
-    public static ViewModel withTimeFromPicture(@Nullable Picture picture, Connectivity connectivity, boolean takePictureButtonEnabled) {
+    public static ViewModel withTimeFromPicture(@Nullable Picture picture, Connectivity connectivity, boolean takePictureButtonEnabled, int camIndex) {
         long timeMs = picture == null ? 0 : picture.timeMs;
-        return new ViewModel(picture, timeMs, connectivity, takePictureButtonEnabled);
+        return new ViewModel(picture, timeMs, connectivity, takePictureButtonEnabled, camIndex);
     }
 
-    public static ViewModel withGivenTime(@Nullable Picture picture, long timeMs, Connectivity connectivity, boolean takePictureButtonEnabled) {
-        return new ViewModel(picture, timeMs, connectivity, takePictureButtonEnabled);
+    public static ViewModel withGivenTime(@Nullable Picture picture, long timeMs, Connectivity connectivity, boolean takePictureButtonEnabled, int camIndex) {
+        return new ViewModel(picture, timeMs, connectivity, takePictureButtonEnabled, camIndex);
     }
 
-    private ViewModel(@Nullable Picture picture, long timeMs, Connectivity connectivity, boolean takePictureButtonEnabled) {
+    private ViewModel(@Nullable Picture picture, long timeMs, Connectivity connectivity, boolean takePictureButtonEnabled, int camIndex) {
         this.picture = picture;
+        this.camIndex = camIndex;
         this.timeText = timeMs == 0 ? ZERO_TIME_TEXT : DATE_FORMAT.format(new Date(timeMs));
         this.takePictureButtonEnabled = takePictureButtonEnabled;
 

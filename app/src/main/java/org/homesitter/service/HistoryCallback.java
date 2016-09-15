@@ -9,15 +9,18 @@ import org.homesitter.Messages;
 import org.homesitter.model.Picture;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 /**
  * Created by mtkachenko on 12/09/16.
  */
 public abstract class HistoryCallback extends BasePubnubCallback {
+    private final int requestedCameraIndex;
 
-    HistoryCallback(@NonNull PubnubService pubnubService) {
+    HistoryCallback(@NonNull PubnubService pubnubService, int cameraIndex) {
         super(pubnubService);
+        this.requestedCameraIndex = cameraIndex;
     }
 
     @Override
@@ -27,6 +30,13 @@ public abstract class HistoryCallback extends BasePubnubCallback {
         List<Picture> pictures;
         try {
             pictures = Messages.parseHistory(message);
+            Iterator<Picture> iterator = pictures.iterator();
+            while (iterator.hasNext()) {
+                Picture picture = iterator.next();
+                if (requestedCameraIndex != picture.cameraIndex) {
+                    iterator.remove();
+                }
+            }
         } catch (Messages.MalformedMessageException e) {
             pictures = Collections.emptyList();
             Log.e(PubnubService.TAG, "Cannot parse history", e);

@@ -52,8 +52,8 @@ public class PubnubService extends Service {
         subscribeForPresence();
     }
 
-    public void requestLastPicture() {
-        requestPictureAt(System.currentTimeMillis(), new HistoryCallback(this) {
+    public void requestLastPicture(final int cameraIndex) {
+        requestPictureAt(System.currentTimeMillis(), new HistoryCallback(this, cameraIndex) {
             @Override
             protected void onSuccess(Picture picture) {
                 onLivePictureReceived(picture);
@@ -61,22 +61,22 @@ public class PubnubService extends Service {
 
             @Override
             protected void onError(String userFriendlyMessage) {
-                notifyNewPictureRequestFailed(userFriendlyMessage);
+                notifyNewPictureRequestFailed(cameraIndex, userFriendlyMessage);
             }
         });
     }
 
-    public void requestPictureAt(long timeMs) {
-        requestPictureAt(timeMs, new HistoryCallback(this) {
+    public void requestPictureAt(final int cameraIndex, long timeMs) {
+        requestPictureAt(timeMs, new HistoryCallback(this, cameraIndex) {
             @Override
             protected void onSuccess(Picture picture) {
-                PictureAtGivenTimeReceivedEvent event = new PictureAtGivenTimeReceivedEvent(picture);
+                PictureAtGivenTimeReceivedEvent event = new PictureAtGivenTimeReceivedEvent(picture, cameraIndex);
                 getApplicationContext().getEventBus().post(event);
             }
 
             @Override
             protected void onError(String userFriendlyMessage) {
-                PictureAtGivenTimeRequestFailedEvent event = new PictureAtGivenTimeRequestFailedEvent(userFriendlyMessage);
+                PictureAtGivenTimeRequestFailedEvent event = new PictureAtGivenTimeRequestFailedEvent(cameraIndex, userFriendlyMessage);
                 getApplicationContext().getEventBus().post(event);
             }
         });
@@ -86,19 +86,19 @@ public class PubnubService extends Service {
         pubnub.history(mainChannelId,
                 timeMs * 10000, // start time
                 -1L, // end time
-                10, // page size
+                20, // page size
                 false, // reverse
                 false, // include timetoken
                 callback);
     }
 
-    public void requestLivePicture() {
-        JSONObject message = Messages.newPictureRequest();
+    public void requestLivePicture(final int cameraIndex) {
+        JSONObject message = Messages.newPictureRequest(cameraIndex);
         pubnub.publish(mainChannelId, message, new BasePubnubCallback(this) {
             @Override
             public void errorCallback(String channel, PubnubError error) {
                 super.errorCallback(channel, error);
-                notifyNewPictureRequestFailed(error.getErrorString());
+                notifyNewPictureRequestFailed(cameraIndex, error.getErrorString());
             }
         });
     }
@@ -162,8 +162,8 @@ public class PubnubService extends Service {
         getApplicationContext().getEventBus().post(event);
     }
 
-    private void notifyNewPictureRequestFailed(String userFriendlyErrorMessage) {
-        LivePictureRequestFailedEvent event = new LivePictureRequestFailedEvent(userFriendlyErrorMessage);
+    private void notifyNewPictureRequestFailed(int cameraIndex, String userFriendlyErrorMessage) {
+        LivePictureRequestFailedEvent event = new LivePictureRequestFailedEvent(cameraIndex, userFriendlyErrorMessage);
         getApplicationContext().getEventBus().post(event);
     }
 
@@ -206,18 +206,24 @@ public class PubnubService extends Service {
     }
 
     public class PictureAtGivenTimeReceivedEvent {
+        @Nullable
         public final Picture picture;
         public final PubnubService service;
+        public final int cameraIndex; // For cases when picture is null
 
-        public PictureAtGivenTimeReceivedEvent(Picture picture) {
+        public PictureAtGivenTimeReceivedEvent(@Nullable Picture picture, int cameraIndex) {
             this.picture = picture;
+            this.cameraIndex = cameraIndex;
             service = PubnubService.this;
         }
     }
 
     public class PictureAtGivenTimeRequestFailedEvent extends RequestFailedEvent {
-        protected PictureAtGivenTimeRequestFailedEvent(String userFriendlyErrorMessage) {
+        public final int cameraIndex;
+
+        protected PictureAtGivenTimeRequestFailedEvent(int cameraIndex, String userFriendlyErrorMessage) {
             super(userFriendlyErrorMessage);
+            this.cameraIndex = cameraIndex;
         }
     }
 
@@ -238,8 +244,10 @@ public class PubnubService extends Service {
     }
 
     public class LivePictureRequestFailedEvent extends RequestFailedEvent {
-        private LivePictureRequestFailedEvent(String userFriendlyErrorMessage) {
+        public final int cameraIndex;
+        private LivePictureRequestFailedEvent(int cameraIndex, String userFriendlyErrorMessage) {
             super(userFriendlyErrorMessage);
+            this.cameraIndex = cameraIndex;
         }
     }
 

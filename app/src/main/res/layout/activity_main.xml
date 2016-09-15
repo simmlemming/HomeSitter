@@ -55,16 +55,43 @@
             tools:text="OK" />
     </LinearLayout>
 
-    <Switch
-        android:id="@+id/autoload_pictures"
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:layout_gravity="right"
-        android:layout_margin="8dp"
-        android:checked="true"
-        android:switchPadding="12dp"
-        android:text="@string/setting_load_live_pictures"
-        android:theme="@style/AppTheme.BrandedSwitch" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <RadioGroup
+            android:id="@+id/cam_index_group"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:theme="@style/AppTheme.BrandedSwitch">
+
+            <RadioButton
+                android:id="@+id/cam_index_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CAM 1" />
+
+            <RadioButton
+                android:id="@+id/cam_index_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CAM 2" />
+        </RadioGroup>
+
+        <Switch
+            android:id="@+id/autoload_pictures"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_gravity="right|center_vertical"
+            android:checked="true"
+            android:switchPadding="12dp"
+            android:text="@string/setting_load_live_pictures"
+            android:theme="@style/AppTheme.BrandedSwitch" />
+    </LinearLayout>
 
     <ImageButton
         android:id="@+id/take_picture"
