@@ -103,6 +103,10 @@ public class Presenter {
 
     @SuppressWarnings("unused")
     public void onEventMainThread(PubnubService.NewLivePictureReceivedEvent event) {
+        if (isInSeekingMode()) {
+            return;
+        }
+
         pictureRequestIsInProgress = false;
         lastLivePicture = event.picture;
         ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePicture, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
@@ -111,6 +115,10 @@ public class Presenter {
 
     @SuppressWarnings("unused")
     public void onEventMainThread(PubnubService.LivePictureRequestFailedEvent event) {
+        if (isInSeekingMode()) {
+            return;
+        }
+
         pictureRequestIsInProgress = false;
         lastLivePicture = null;
         ViewModel viewModel = ViewModel.withTimeFromPicture(null, event.service.getCurrentConnectivity(), pictureRequestIsInProgress);
