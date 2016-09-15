@@ -29,7 +29,9 @@ public class PicturesWidget extends FrameLayout implements View.OnClickListener 
 
     public interface OnSeekListener {
         void onSeek(long ms);
-        void onSeekDone();
+        void onSeekToNow();
+        void onEnterSeekMode();
+        void onExitSeekMode();
     }
 
     private View seekButtonsBlock;
@@ -75,7 +77,7 @@ public class PicturesWidget extends FrameLayout implements View.OnClickListener 
             @Override
             public void onClick(View v) {
                 if (onSeekListener != null) {
-                    onSeekListener.onSeekDone();
+                    onSeekListener.onSeekToNow();
                 }
             }
         });
@@ -89,6 +91,14 @@ public class PicturesWidget extends FrameLayout implements View.OnClickListener 
 
     @Override
     public void onClick(View v) {
+        if (onSeekListener != null) {
+            if (seekButtonsBlock.getVisibility() == VISIBLE) {
+                onSeekListener.onExitSeekMode();
+            } else {
+                onSeekListener.onEnterSeekMode();
+            }
+        }
+
         toggleSeekButtons();
     }
 

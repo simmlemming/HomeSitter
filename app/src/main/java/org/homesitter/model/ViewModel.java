@@ -12,7 +12,7 @@ import java.util.Date;
  * Created by mtkachenko on 14/09/16.
  */
 public class ViewModel {
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM dd',' HH:mm:ss");
+    public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM dd',' HH:mm:ss");
     private static final String DATE_PLACEHOLDER = "--- --, --:--:--";
 
     public final Picture picture;
@@ -31,9 +31,13 @@ public class ViewModel {
         }
     }
 
-    private ViewModel(@NonNull Picture picture, Connectivity connectivity, boolean takePictureButtonEnabled) {
+    public static ViewModel seeking(@Nullable Picture picture, long seekTime, Connectivity connectivity, boolean takePictureButtonEnabled) {
+        return new ViewModel(picture, seekTime, connectivity, takePictureButtonEnabled);
+    }
+
+    private ViewModel(@Nullable Picture picture, long timeMs, Connectivity connectivity, boolean takePictureButtonEnabled) {
         this.picture = picture;
-        this.timeText = DATE_FORMAT.format(new Date(picture.timeMs));
+        this.timeText = timeMs == 0 ? DATE_PLACEHOLDER : DATE_FORMAT.format(new Date(timeMs));
         this.takePictureButtonEnabled = takePictureButtonEnabled;
 
         int[] state = stateParams(connectivity);
@@ -41,14 +45,12 @@ public class ViewModel {
         stateTextResId = state[1];
     }
 
-    private ViewModel(long timeMs, Connectivity connectivity, boolean takePictureButtonEnabled) {
-        this.picture = null;
-        this.timeText = timeMs == 0 ? DATE_PLACEHOLDER : DATE_FORMAT.format(new Date(timeMs));
-        this.takePictureButtonEnabled = takePictureButtonEnabled;
+    private ViewModel(@NonNull Picture picture, Connectivity connectivity, boolean takePictureButtonEnabled) {
+        this(picture, picture.timeMs, connectivity, takePictureButtonEnabled);
+    }
 
-        int[] state = stateParams(connectivity);
-        stateColorResId = state[0];
-        stateTextResId = state[1];
+    private ViewModel(long timeMs, Connectivity connectivity, boolean takePictureButtonEnabled) {
+        this(null, timeMs, connectivity, takePictureButtonEnabled);
     }
 
     private int[] stateParams(Connectivity connectivity) {

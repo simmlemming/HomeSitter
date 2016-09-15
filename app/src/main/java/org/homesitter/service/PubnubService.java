@@ -66,6 +66,22 @@ public class PubnubService extends Service {
         });
     }
 
+    public void requestPictureAt(long timeMs) {
+        requestPictureAt(timeMs, new HistoryCallback(this) {
+            @Override
+            protected void onSuccess(Picture picture) {
+                PictureAtGivenTimeReceivedEvent event = new PictureAtGivenTimeReceivedEvent(picture);
+                getApplicationContext().getEventBus().post(event);
+            }
+
+            @Override
+            protected void onError(String userFriendlyMessage) {
+                PictureAtGivenTimeRequestFailedEvent event = new PictureAtGivenTimeRequestFailedEvent(userFriendlyMessage);
+                getApplicationContext().getEventBus().post(event);
+            }
+        });
+    }
+
     private void requestPictureAt(long timeMs, Callback callback) {
         pubnub.history(mainChannelId,
                 timeMs * 10000, // start time
@@ -189,6 +205,22 @@ public class PubnubService extends Service {
         }
     }
 
+    public class PictureAtGivenTimeReceivedEvent {
+        public final Picture picture;
+        public final PubnubService service;
+
+        public PictureAtGivenTimeReceivedEvent(Picture picture) {
+            this.picture = picture;
+            service = PubnubService.this;
+        }
+    }
+
+    public class PictureAtGivenTimeRequestFailedEvent extends RequestFailedEvent {
+        protected PictureAtGivenTimeRequestFailedEvent(String userFriendlyErrorMessage) {
+            super(userFriendlyErrorMessage);
+        }
+    }
+
     public abstract class RequestFailedEvent {
         public final PubnubService service;
         public final String userFriendlyErrorMessage;
@@ -200,7 +232,6 @@ public class PubnubService extends Service {
     }
 
     public class GeneralFailureEvent extends RequestFailedEvent {
-
         protected GeneralFailureEvent(String userFriendlyErrorMessage) {
             super(userFriendlyErrorMessage);
         }

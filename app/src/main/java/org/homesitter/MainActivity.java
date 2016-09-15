@@ -17,6 +17,8 @@ import org.homesitter.model.ViewModel;
 import org.homesitter.service.PubnubService;
 import org.homesitter.widget.PicturesWidget;
 
+import java.util.Calendar;
+
 public class MainActivity extends AppCompatActivity {
     private ImageView lastImageView;
     private View takePictureView;
@@ -45,20 +47,29 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSeek(long ms) {
-//                pictureTimeMs += ms;
-//                updateTimeView(pictureTimeMs);
+                presenter.seekBy(pubnubService, ms);
             }
 
             @Override
-            public void onSeekDone() {
-//                pubnubService.requestPictureAt(pictureTimeMs);
+            public void onSeekToNow() {
+                presenter.seekTo(pubnubService, Calendar.getInstance().getTimeInMillis());
+            }
+
+            @Override
+            public void onEnterSeekMode() {
+                presenter.enterSeekingMode();
+            }
+
+            @Override
+            public void onExitSeekMode() {
+                presenter.exitSeekingMode();
             }
         });
 
         takePictureView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                presenter.requestLivePicture(pubnubService);
+                presenter.onTakePictureClick(pubnubService);
             }
         });
 
