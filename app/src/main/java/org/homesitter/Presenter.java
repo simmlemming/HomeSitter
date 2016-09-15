@@ -82,8 +82,10 @@ public class Presenter {
         seekTimeMs = lastLivePicture == null ? 0 : lastLivePicture.timeMs;
     }
 
-    public void exitSeekingMode() {
+    public void exitSeekingMode(PubnubService service) {
         seekTimeMs = 0;
+        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePicture, service.getCurrentConnectivity(), pictureRequestIsInProgress);
+        application.getEventBus().post(viewModel);
     }
 
     public void seekTo(PubnubService service, long timeMs) {

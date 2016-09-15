@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onExitSeekMode() {
-                presenter.exitSeekingMode();
+                presenter.exitSeekingMode(pubnubService);
             }
         });
 
