@@ -2,10 +2,11 @@ package org.homesitter.model;
 
 import android.support.annotation.Nullable;
 
+import org.homesitter.HomeSitter;
 import org.homesitter.R;
+import org.homesitter.utils.Utils;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Created by mtkachenko on 14/09/16.
@@ -14,59 +15,109 @@ public class ViewModel {
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM dd',' HH:mm:ss");
     private static final String ZERO_TIME_TEXT = "--- --, --:--:--";
 
-    public final Picture picture;
-    public final String timeText;
-    public final int stateColorResId, stateTextResId;
-    public final boolean takePictureButtonEnabled;
-    public final int camIndex;
+    private Picture picture;
+    private String timeText;
+    private int stateColorResId, stateTextResId;
+    private boolean takePictureButtonEnabled;
+    private int camIndex;
 
-    public String userFriendlyErrorMessage;
+    @Nullable
+    private String userFriendlyErrorMessage;
 
-    public static ViewModel withTimeFromPicture(@Nullable Picture picture, Connectivity connectivity, boolean takePictureButtonEnabled, int camIndex) {
-        long timeMs = picture == null ? 0 : picture.timeMs;
-        return new ViewModel(picture, timeMs, connectivity, takePictureButtonEnabled, camIndex);
-    }
-
-    public static ViewModel withGivenTime(@Nullable Picture picture, long timeMs, Connectivity connectivity, boolean takePictureButtonEnabled, int camIndex) {
-        return new ViewModel(picture, timeMs, connectivity, takePictureButtonEnabled, camIndex);
-    }
-
-    private ViewModel(@Nullable Picture picture, long timeMs, Connectivity connectivity, boolean takePictureButtonEnabled, int camIndex) {
+    public ViewModel(@Nullable Picture picture, int camIndex) {
         this.picture = picture;
         this.camIndex = camIndex;
-        this.timeText = timeMs == 0 ? ZERO_TIME_TEXT : DATE_FORMAT.format(new Date(timeMs));
-        this.takePictureButtonEnabled = takePictureButtonEnabled;
-
-        int[] state = stateParams(connectivity);
-        stateColorResId = state[0];
-        stateTextResId = state[1];
+        setTimeText(picture == null ? 0 : picture.timeMs);
+        takePictureButtonEnabled = true;
+        this.stateColorResId = R.color.neutral;
+        this.stateTextResId = R.string.status_unknown;
     }
 
-    private int[] stateParams(Connectivity connectivity) {
-        switch (connectivity.self) {
-            case DISCONNECTED:
-                return new int[] {R.color.error, R.string.status_disconnected};
+    public Picture getPicture() {
+        return picture;
+    }
 
-            case CONNECTED:
-                return forHomeState(connectivity.home);
+    public ViewModel setPictureAndTime(Picture picture, long fallbackTimeMs) {
+        setPictureAndTime(picture);
 
-            default:
-            case UNKNOWN:
-                return new int[] {R.color.neutral, R.string.status_unknown};
+        if (picture == null) {
+            setTimeText(fallbackTimeMs);
         }
+
+        return this;
     }
 
-    private int[] forHomeState(Connectivity.State homeState) {
-        switch (homeState) {
-            case DISCONNECTED:
-                return new int[] {R.color.error, R.string.status_home_disconnected};
+    public ViewModel setPictureAndTime(Picture picture) {
+        this.picture = picture;
+        setTimeText(picture == null ? 0 : picture.timeMs);
+        return this;
+    }
 
-            case CONNECTED:
-                return new int[] {R.color.ok, R.string.status_ok};
+    public ViewModel setConnectivity(Connectivity connectivity) {
+        int[] params = Utils.connectivityToUiParams(connectivity);
+        stateColorResId = params[0];
+        stateTextResId = params[1];
+        return this;
+    }
 
-            default:
-            case UNKNOWN:
-                return new int[] {R.color.neutral, R.string.status_unknown};
+    public int getStateColorResId() {
+        return stateColorResId;
+    }
+
+    public int getStateTextResId() {
+        return stateTextResId;
+    }
+
+    public boolean isTakePictureButtonEnabled() {
+        return takePictureButtonEnabled;
+    }
+
+    public ViewModel setTakePictureButtonEnabled(boolean takePictureButtonEnabled) {
+        this.takePictureButtonEnabled = takePictureButtonEnabled;
+        return this;
+    }
+
+    public String getTimeText() {
+        return timeText;
+    }
+
+    public ViewModel setTimeText(long timeMs) {
+        this.timeText = timeMs == 0
+                ? ZERO_TIME_TEXT
+                : DATE_FORMAT.format(timeMs);
+
+        return this;
+    }
+
+    @Nullable
+    public String getUserFriendlyErrorMessage() {
+        return userFriendlyErrorMessage;
+    }
+
+    public ViewModel setUserFriendlyErrorMessage(@Nullable String userFriendlyErrorMessage) {
+        this.userFriendlyErrorMessage = userFriendlyErrorMessage;
+        return this;
+    }
+
+    public int getCamIndex() {
+        return camIndex;
+    }
+
+    public ViewModel setCamIndex(int camIndex) {
+        this.camIndex = camIndex;
+        return this;
+    }
+
+    public void notifyInvalidated(HomeSitter application) {
+        InvalidatedEvent event = new InvalidatedEvent(this);
+        application.getEventBus().post(event);
+    }
+
+    public static class InvalidatedEvent {
+        public final ViewModel viewModel;
+
+        private InvalidatedEvent(ViewModel viewModel) {
+            this.viewModel = viewModel;
         }
     }
 }

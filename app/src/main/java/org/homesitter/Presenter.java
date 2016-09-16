@@ -1,8 +1,5 @@
 package org.homesitter;
 
-import android.support.annotation.NonNull;
-
-import org.homesitter.model.Connectivity;
 import org.homesitter.model.Picture;
 import org.homesitter.model.ViewModel;
 import org.homesitter.service.PubnubService;
@@ -14,17 +11,19 @@ import java.util.Calendar;
  */
 public class Presenter {
     private final HomeSitter application;
-    private boolean pictureRequestIsInProgress = false;
     private Picture[] lastLivePictures;
     private Picture[] lastSeekPictures;
 
     private long seekTimeMs;
     private int cameraIndex;
 
+    private ViewModel viewModel;
+
     public Presenter(HomeSitter application, int camerasCount) {
         this.application = application;
         lastLivePictures = new Picture[camerasCount];
         lastSeekPictures = new Picture[camerasCount];
+        viewModel = new ViewModel(null, 0);
     }
 
     public void saveState() {
@@ -38,7 +37,10 @@ public class Presenter {
             lastLivePictures[i] = application.getStorage().restorePicture(i);
         }
 
-        return ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], new Connectivity(Connectivity.State.UNKNOWN, Connectivity.State.UNKNOWN), pictureRequestIsInProgress, cameraIndex);
+        viewModel.setPictureAndTime(lastLivePictures[cameraIndex])
+                .setCamIndex(cameraIndex);
+
+        return viewModel;
     }
 
     public void onTakePictureClick(PubnubService service) {
@@ -55,31 +57,30 @@ public class Presenter {
         }
 
         this.cameraIndex = cameraIndex;
-        ViewModel viewModel;
-        if (isInSeekingMode()) {
-            viewModel = onCameraChangeInSeekMode(service, cameraIndex);
-        } else {
-            viewModel = ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
-        }
 
-        application.getEventBus().post(viewModel);
+        if (isInSeekingMode()) {
+            onCameraChangeInSeekMode(service, cameraIndex);
+        } else {
+            viewModel.setPictureAndTime(lastLivePictures[cameraIndex])
+                    .setCamIndex(cameraIndex)
+                    .notifyInvalidated(application);
+        }
     }
 
-    @NonNull
-    private ViewModel onCameraChangeInSeekMode(PubnubService service, int cameraIndex) {
+    private void onCameraChangeInSeekMode(PubnubService service, int cameraIndex) {
         if (lastSeekPictures[cameraIndex] == null) {
             requestPictureAtSeekTime(service);
         } else {
             seekTimeMs = lastSeekPictures[cameraIndex].timeMs;
         }
 
-        return ViewModel.withGivenTime(lastSeekPictures[cameraIndex], seekTimeMs, service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
+        viewModel.setPictureAndTime(lastSeekPictures[cameraIndex], seekTimeMs)
+                .setCamIndex(cameraIndex)
+                .notifyInvalidated(application);
     }
 
-    public ViewModel requestCurrentState(PubnubService service) {
+    public void requestCurrentState(PubnubService service) {
         service.requestConnectivityStateRefresh();
-        Connectivity connectivity = service.getCurrentConnectivity();
-        return ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], connectivity, pictureRequestIsInProgress, cameraIndex);
     }
 
     public void requestLastPictureIfNeeded(PubnubService service) {
@@ -92,24 +93,24 @@ public class Presenter {
                 && (currentTimeMs - lastLivePictures[cameraIndex].timeMs) < picturesIntervalMs; // It's recent
 
         if (!haveRecentPicture) {
-            pictureRequestIsInProgress = true;
             service.requestLastPicture(cameraIndex);
+            viewModel.setTakePictureButtonEnabled(false)
+                    .notifyInvalidated(application);
         }
     }
 
     public void requestLivePicture(PubnubService service) {
-        pictureRequestIsInProgress = true;
         service.requestLivePicture(cameraIndex);
-        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
-        application.getEventBus().post(viewModel);
+
+        viewModel.setTakePictureButtonEnabled(false)
+                .notifyInvalidated(application);
     }
 
     public void requestPictureAtSeekTime(PubnubService service) {
-        pictureRequestIsInProgress = true;
         service.requestPictureAt(cameraIndex, seekTimeMs);
 
-        ViewModel viewModel = ViewModel.withGivenTime(lastSeekPictures[cameraIndex], seekTimeMs, service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
-        application.getEventBus().post(viewModel);
+        viewModel.setTakePictureButtonEnabled(false)
+                .notifyInvalidated(application);
     }
 
     public void enterSeekingMode() {
@@ -119,19 +120,21 @@ public class Presenter {
 
     public void exitSeekingMode(PubnubService service) {
         seekTimeMs = 0;
-        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
-        application.getEventBus().post(viewModel);
+        viewModel.setPictureAndTime(lastLivePictures[cameraIndex])
+                .notifyInvalidated(application);
+
+        requestLastPictureIfNeeded(service);
     }
 
-    public void seekTo(PubnubService service, long timeMs) {
+    public void seekTo(long timeMs) {
         seekTimeMs = timeMs;
 
-        ViewModel viewModel = ViewModel.withGivenTime(lastSeekPictures[cameraIndex], seekTimeMs, service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
-        application.getEventBus().post(viewModel);
+        viewModel.setTimeText(timeMs)
+                .notifyInvalidated(application);
     }
 
-    public void seekBy(PubnubService service, long deltaMs) {
-        seekTo(service, seekTimeMs + deltaMs);
+    public void seekBy(long deltaMs) {
+        seekTo(seekTimeMs + deltaMs);
     }
 
     private boolean isInSeekingMode() {
@@ -144,12 +147,12 @@ public class Presenter {
             return;
         }
 
-        pictureRequestIsInProgress = false;
         lastLivePictures[event.picture.cameraIndex] = event.picture;
 
         if (cameraIndex == event.picture.cameraIndex) {
-            ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], event.service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
-            application.getEventBus().post(viewModel);
+            viewModel.setPictureAndTime(event.picture)
+                    .setTakePictureButtonEnabled(true)
+                    .notifyInvalidated(application);
         }
     }
 
@@ -159,53 +162,46 @@ public class Presenter {
             return;
         }
 
-        pictureRequestIsInProgress = false;
         lastLivePictures[event.cameraIndex] = null;
+
         if (cameraIndex == event.cameraIndex) {
-            ViewModel viewModel = ViewModel.withTimeFromPicture(null, event.service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
-            application.getEventBus().post(viewModel);
+            viewModel.setPictureAndTime(null)
+                    .setTakePictureButtonEnabled(true)
+                    .setUserFriendlyErrorMessage(event.userFriendlyErrorMessage)
+                    .notifyInvalidated(application);
         }
     }
 
     @SuppressWarnings("unused")
     public void onEventMainThread(PubnubService.ConnectivityChangedEvent event) {
-        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], event.connectivity, pictureRequestIsInProgress, cameraIndex);
-        application.getEventBus().post(viewModel);
+        viewModel.setConnectivity(event.connectivity)
+                .notifyInvalidated(application);
     }
 
     @SuppressWarnings("unused")
     public void onEventMainThread(PubnubService.GeneralFailureEvent event) {
-        ViewModel viewModel = ViewModel.withTimeFromPicture(lastLivePictures[cameraIndex], event.service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
-        viewModel.userFriendlyErrorMessage = event.userFriendlyErrorMessage;
-        application.getEventBus().post(viewModel);
+        viewModel.setUserFriendlyErrorMessage(event.userFriendlyErrorMessage)
+                .notifyInvalidated(application);
     }
 
     @SuppressWarnings("unused")
     public void onEventMainThread(PubnubService.PictureAtGivenTimeReceivedEvent event) {
-        if (cameraIndex != event.cameraIndex) {
-            return;
-        }
-
-        pictureRequestIsInProgress = false;
         lastSeekPictures[event.cameraIndex] = event.picture;
 
-        ViewModel viewModel;
-        if (event.picture == null) {
-            viewModel = ViewModel.withGivenTime(null, seekTimeMs, event.service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
-        } else {
-            seekTimeMs = event.picture.timeMs;
-            viewModel = ViewModel.withTimeFromPicture(event.picture, event.service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
+        if (cameraIndex == event.cameraIndex) {
+            seekTimeMs = event.picture == null ? seekTimeMs : event.picture.timeMs;
+            viewModel.setPictureAndTime(event.picture, seekTimeMs)
+                    .setTakePictureButtonEnabled(true)
+                    .notifyInvalidated(application);
         }
-        application.getEventBus().post(viewModel);
     }
 
     @SuppressWarnings("unused")
     public void onEventMainThread(PubnubService.PictureAtGivenTimeRequestFailedEvent event) {
-        pictureRequestIsInProgress = false;
         lastSeekPictures[event.cameraIndex] = null;
         if (cameraIndex == event.cameraIndex) {
-            ViewModel viewModel = ViewModel.withTimeFromPicture(null, event.service.getCurrentConnectivity(), pictureRequestIsInProgress, cameraIndex);
-            application.getEventBus().post(viewModel);
+            viewModel.setPictureAndTime(null, seekTimeMs)
+                    .notifyInvalidated(application);
         }
     }
 }

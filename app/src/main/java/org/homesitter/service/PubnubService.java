@@ -228,12 +228,10 @@ public class PubnubService extends Service {
     }
 
     public abstract class RequestFailedEvent {
-        public final PubnubService service;
         public final String userFriendlyErrorMessage;
 
         protected RequestFailedEvent(String userFriendlyErrorMessage) {
             this.userFriendlyErrorMessage = userFriendlyErrorMessage;
-            this.service = PubnubService.this;
         }
     }
 
@@ -245,6 +243,7 @@ public class PubnubService extends Service {
 
     public class LivePictureRequestFailedEvent extends RequestFailedEvent {
         public final int cameraIndex;
+
         private LivePictureRequestFailedEvent(int cameraIndex, String userFriendlyErrorMessage) {
             super(userFriendlyErrorMessage);
             this.cameraIndex = cameraIndex;

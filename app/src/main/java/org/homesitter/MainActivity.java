@@ -50,12 +50,12 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSeek(long ms) {
-                presenter.seekBy(pubnubService, ms);
+                presenter.seekBy(ms);
             }
 
             @Override
             public void onSeekToNow() {
-                presenter.seekTo(pubnubService, Calendar.getInstance().getTimeInMillis());
+                presenter.seekTo(Calendar.getInstance().getTimeInMillis());
             }
 
             @Override
@@ -94,31 +94,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @SuppressWarnings("unused")
-    public void onEventMainThread(ViewModel viewModel) {
-        updateView(viewModel);
+    public void onEventMainThread(ViewModel.InvalidatedEvent event) {
+        updateView(event.viewModel);
     }
 
     private void updateView(ViewModel viewModel) {
-        if (viewModel.picture == null) {
+        if (viewModel.getPicture() == null) {
             lastImageView.setScaleType(ImageView.ScaleType.CENTER);
             lastImageView.setImageResource(R.drawable.ic_launcher_icon);
         } else {
             lastImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             Picasso.with(this)
-                    .load(viewModel.picture.link)
+                    .load(viewModel.getPicture().link)
                     .into(lastImageView);
         }
 
-        timeView.setText(viewModel.timeText);
-        takePictureView.setEnabled(!viewModel.takePictureButtonEnabled);
+        timeView.setText(viewModel.getTimeText());
+        takePictureView.setEnabled(viewModel.isTakePictureButtonEnabled());
 
-        stateView.setBackgroundColor(getResources().getColor(viewModel.stateColorResId));
-        stateView.setText(viewModel.stateTextResId);
+        stateView.setBackgroundColor(getResources().getColor(viewModel.getStateColorResId()));
+        stateView.setText(viewModel.getStateTextResId());
 
-        camIndexGroup.check(viewModel.camIndex == 0 ? R.id.cam_index_0 : R.id.cam_index_1);
+        camIndexGroup.check(viewModel.getCamIndex() == 0 ? R.id.cam_index_0 : R.id.cam_index_1);
 
-        if (!TextUtils.isEmpty(viewModel.userFriendlyErrorMessage)) {
-            Snackbar.make(lastImageView, viewModel.userFriendlyErrorMessage, Snackbar.LENGTH_SHORT).show();
+        if (!TextUtils.isEmpty(viewModel.getUserFriendlyErrorMessage())) {
+            Snackbar.make(lastImageView, viewModel.getUserFriendlyErrorMessage(), Snackbar.LENGTH_SHORT).show();
+            viewModel.setUserFriendlyErrorMessage(null);
         }
     }
 
