@@ -64,6 +64,7 @@ public class Presenter {
             viewModel.setPictureAndTime(lastLivePictures[cameraIndex])
                     .setCamIndex(cameraIndex)
                     .notifyInvalidated(application);
+            requestLastPictureIfNeeded(service);
         }
     }
 
