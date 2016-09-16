@@ -68,15 +68,15 @@ public class Presenter {
     }
 
     private void onCameraChangeInSeekMode(PubnubService service, int cameraIndex) {
-        if (lastSeekPictures[cameraIndex] == null) {
-            requestPictureAtSeekTime(service);
-        } else {
-            seekTimeMs = lastSeekPictures[cameraIndex].timeMs;
-        }
+        Picture lastSeekPicture = lastSeekPictures[cameraIndex];
 
-        viewModel.setPictureAndTime(lastSeekPictures[cameraIndex], seekTimeMs)
+        viewModel.setPictureAndTime(lastSeekPicture)
                 .setCamIndex(cameraIndex)
                 .notifyInvalidated(application);
+
+        if (!isPictureYoungerThan(lastSeekPicture, seekTimeMs, 60 * 1000)) {
+            requestPictureAtSeekTime(service);
+        }
     }
 
     public void requestCurrentState(PubnubService service) {
@@ -85,18 +85,21 @@ public class Presenter {
 
     public void requestLastPictureIfNeeded(PubnubService service) {
         HomeSitter.HomeSitterSettings settings = application.getSettings();
-
         long picturesIntervalMs = settings.getPicturesIntervalMs();
         long currentTimeMs = Calendar.getInstance().getTimeInMillis();
 
-        boolean haveRecentPicture = (lastLivePictures[cameraIndex] != null) // Have last picture
-                && (currentTimeMs - lastLivePictures[cameraIndex].timeMs) < picturesIntervalMs; // It's recent
+        boolean haveRecentPicture = isPictureYoungerThan(lastLivePictures[cameraIndex], currentTimeMs, picturesIntervalMs);
 
         if (!haveRecentPicture) {
             service.requestLastPicture(cameraIndex);
             viewModel.setTakePictureButtonEnabled(false)
                     .notifyInvalidated(application);
         }
+    }
+
+    private boolean isPictureYoungerThan(Picture picture, long timeStartMs, long ageMs) {
+        return (picture != null) // Have last picture
+                && (Math.abs(timeStartMs - picture.timeMs)) < ageMs;
     }
 
     public void requestLivePicture(PubnubService service) {
@@ -115,12 +118,18 @@ public class Presenter {
 
     public void enterSeekingMode() {
         lastSeekPictures[cameraIndex] = lastLivePictures[cameraIndex];
-        seekTimeMs = lastLivePictures[cameraIndex] == null ? 0 : lastLivePictures[cameraIndex].timeMs;
+        seekTimeMs = lastLivePictures[cameraIndex] == null
+                ? Calendar.getInstance().getTimeInMillis()
+                : lastLivePictures[cameraIndex].timeMs;
+
+        viewModel.setSeekTime(seekTimeMs)
+                .notifyInvalidated(application);
     }
 
     public void exitSeekingMode(PubnubService service) {
         seekTimeMs = 0;
         viewModel.setPictureAndTime(lastLivePictures[cameraIndex])
+                .setSeekTime(0)
                 .notifyInvalidated(application);
 
         requestLastPictureIfNeeded(service);
@@ -129,7 +138,7 @@ public class Presenter {
     public void seekTo(long timeMs) {
         seekTimeMs = timeMs;
 
-        viewModel.setTimeText(timeMs)
+        viewModel.setSeekTime(timeMs)
                 .notifyInvalidated(application);
     }
 
@@ -189,8 +198,7 @@ public class Presenter {
         lastSeekPictures[event.cameraIndex] = event.picture;
 
         if (cameraIndex == event.cameraIndex) {
-            seekTimeMs = event.picture == null ? seekTimeMs : event.picture.timeMs;
-            viewModel.setPictureAndTime(event.picture, seekTimeMs)
+            viewModel.setPictureAndTime(event.picture)
                     .setTakePictureButtonEnabled(true)
                     .notifyInvalidated(application);
         }
@@ -200,7 +208,7 @@ public class Presenter {
     public void onEventMainThread(PubnubService.PictureAtGivenTimeRequestFailedEvent event) {
         lastSeekPictures[event.cameraIndex] = null;
         if (cameraIndex == event.cameraIndex) {
-            viewModel.setPictureAndTime(null, seekTimeMs)
+            viewModel.setPictureAndTime(null)
                     .notifyInvalidated(application);
         }
     }

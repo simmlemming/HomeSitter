@@ -7,7 +7,6 @@ import android.os.IBinder;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -16,15 +15,14 @@ import com.squareup.picasso.Picasso;
 
 import org.homesitter.model.ViewModel;
 import org.homesitter.service.PubnubService;
-import org.homesitter.widget.PicturesWidget;
+import org.homesitter.widget.SeekButtonsWidget;
 
 import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
     private ImageView lastImageView;
-    private View takePictureView;
+    private SeekButtonsWidget seekButtonsWidget;
     private TextView stateView, timeView;
-    private PicturesWidget picturesWidget;
     private RadioGroup camIndexGroup;
 
     private PubnubService pubnubService;
@@ -38,16 +36,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         lastImageView = (ImageView) findViewById(R.id.last_image);
-        takePictureView = findViewById(R.id.take_picture);
         stateView = (TextView) findViewById(R.id.state);
+        seekButtonsWidget = (SeekButtonsWidget) findViewById(R.id.seek_buttons_widget);
         timeView = (TextView) findViewById(R.id.time);
-        picturesWidget = (PicturesWidget) findViewById(R.id.pictures);
         camIndexGroup = (RadioGroup) findViewById(R.id.cam_index_group);
 
         presenter = new Presenter(getApplicationContext(), HomeSitter.CAMERAS_COUNT);
 
-        picturesWidget.setOnSeekListener(new PicturesWidget.OnSeekListener() {
-
+        seekButtonsWidget.setListener(new SeekButtonsWidget.Listener() {
             @Override
             public void onSeek(long ms) {
                 presenter.seekBy(ms);
@@ -67,18 +63,16 @@ public class MainActivity extends AppCompatActivity {
             public void onExitSeekMode() {
                 presenter.exitSeekingMode(pubnubService);
             }
+
+            @Override
+            public void onTakePictureClick() {
+                presenter.onTakePictureClick(pubnubService);
+            }
         });
 
         // Before listeners set
         ViewModel lastViewModel = presenter.restoreState();
         updateView(lastViewModel);
-
-        takePictureView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                presenter.onTakePictureClick(pubnubService);
-            }
-        });
 
         camIndexGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -110,17 +104,22 @@ public class MainActivity extends AppCompatActivity {
         }
 
         timeView.setText(viewModel.getTimeText());
-        takePictureView.setEnabled(viewModel.isTakePictureButtonEnabled());
+        seekButtonsWidget.getTakePictureView().setEnabled(viewModel.isTakePictureButtonEnabled());
 
         stateView.setBackgroundColor(getResources().getColor(viewModel.getStateColorResId()));
         stateView.setText(viewModel.getStateTextResId());
 
         camIndexGroup.check(viewModel.getCamIndex() == 0 ? R.id.cam_index_0 : R.id.cam_index_1);
 
+        if (viewModel.getSeekTime() != 0) {
+            seekButtonsWidget.setSeekTime(viewModel.getSeekTime());
+        }
+
         if (!TextUtils.isEmpty(viewModel.getUserFriendlyErrorMessage())) {
             Snackbar.make(lastImageView, viewModel.getUserFriendlyErrorMessage(), Snackbar.LENGTH_SHORT).show();
             viewModel.setUserFriendlyErrorMessage(null);
         }
+
     }
 
     @Override

@@ -9,10 +9,33 @@
     android:orientation="vertical"
     tools:context="org.homesitter.MainActivity">
 
-    <org.homesitter.widget.PicturesWidget
-        android:id="@+id/pictures"
+    <RadioGroup
+        android:id="@+id/cam_index_group"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="48dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:theme="@style/AppTheme.BrandedSwitch">
+
+        <RadioButton
+            android:id="@+id/cam_index_0"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CAM 1" />
+
+        <RadioButton
+            android:id="@+id/cam_index_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CAM 2" />
+    </RadioGroup>
+
+    <org.homesitter.widget.ImageView3by4
+        android:id="@+id/last_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimary_disabled"
+        android:scaleType="centerCrop" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -22,15 +45,12 @@
 
         <TextView
             android:id="@+id/time"
+            style="@style/Time"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="right|top"
             android:layout_marginLeft="8dp"
             android:gravity="center"
-            android:textColor="@color/white"
-            android:textSize="16dp"
-            android:textStyle="bold"
-            android:typeface="monospace"
             tools:text="Sep 18, 22:44" />
 
         <View
@@ -59,47 +79,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="8dp">
+        android:orientation="vertical">
 
-        <RadioGroup
-            android:id="@+id/cam_index_group"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:theme="@style/AppTheme.BrandedSwitch">
-
-            <RadioButton
-                android:id="@+id/cam_index_0"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="CAM 1" />
-
-            <RadioButton
-                android:id="@+id/cam_index_1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="CAM 2" />
-        </RadioGroup>
-
-        <Switch
-            android:id="@+id/autoload_pictures"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_gravity="right|center_vertical"
-            android:checked="true"
-            android:switchPadding="12dp"
-            android:text="@string/setting_load_live_pictures"
-            android:theme="@style/AppTheme.BrandedSwitch" />
+        <org.homesitter.widget.SeekButtonsWidget
+            android:id="@+id/seek_buttons_widget"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
     </LinearLayout>
-
-    <ImageButton
-        android:id="@+id/take_picture"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:background="@drawable/oval_shape_color_primary"
-        android:elevation="4dp"
-        android:src="@drawable/ic_camera_black_24dp"
-        android:tint="@color/white" />
-
 </LinearLayout>

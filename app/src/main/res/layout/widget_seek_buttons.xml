@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="96dp"
+    android:gravity="center"
+    android:orientation="horizontal"
+    tools:ignore="HardcodedText">
+
+    <LinearLayout
+        android:id="@+id/seek_buttons"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <org.homesitter.widget.AdjustableTextView
+            android:id="@+id/date"
+            style="@style/Time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:drawableBottom="@drawable/ic_keyboard_arrow_down_black_18dp"
+            android:drawableTint="@color/white"
+            android:drawableTop="@drawable/ic_keyboard_arrow_up_black_18dp"
+            android:gravity="center"
+            android:paddingBottom="12dp"
+            android:paddingTop="12dp"
+            android:text="12 Sep" />
+
+        <TextView
+            style="@style/Time"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="," />
+
+        <org.homesitter.widget.AdjustableTextView
+            android:id="@+id/hour"
+            style="@style/Time"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:drawableBottom="@drawable/ic_keyboard_arrow_down_black_18dp"
+            android:drawableTint="@color/white"
+            android:drawableTop="@drawable/ic_keyboard_arrow_up_black_18dp"
+            android:gravity="center"
+            android:paddingBottom="12dp"
+            android:paddingTop="12dp"
+            android:text="22" />
+
+        <TextView
+            style="@style/Time"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text=":" />
+
+        <org.homesitter.widget.AdjustableTextView
+            android:id="@+id/minute"
+            style="@style/Time"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:drawableBottom="@drawable/ic_keyboard_arrow_down_black_18dp"
+            android:drawableTint="@color/white"
+            android:drawableTop="@drawable/ic_keyboard_arrow_up_black_18dp"
+            android:gravity="center"
+            android:paddingBottom="12dp"
+            android:paddingTop="12dp"
+            android:text="41" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/take_picture"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_margin="12dp"
+        android:background="@drawable/oval_shape_color_primary"
+        android:elevation="4dp"
+        android:src="@drawable/ic_camera_black_24dp"
+        android:tint="@color/white"
+        tools:showIn="@layout/widget_seek_buttons" />
+</LinearLayout>

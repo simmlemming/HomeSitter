@@ -20,6 +20,7 @@ public class ViewModel {
     private int stateColorResId, stateTextResId;
     private boolean takePictureButtonEnabled;
     private int camIndex;
+    private long seekTime = 0;
 
     @Nullable
     private String userFriendlyErrorMessage;
@@ -37,15 +38,15 @@ public class ViewModel {
         return picture;
     }
 
-    public ViewModel setPictureAndTime(Picture picture, long fallbackTimeMs) {
-        setPictureAndTime(picture);
-
-        if (picture == null) {
-            setTimeText(fallbackTimeMs);
-        }
-
-        return this;
-    }
+//    public ViewModel setPictureAndTime(Picture picture, long fallbackTimeMs) {
+//        setPictureAndTime(picture);
+//
+//        if (picture == null) {
+//            setTimeText(fallbackTimeMs);
+//        }
+//
+//        return this;
+//    }
 
     public ViewModel setPictureAndTime(Picture picture) {
         this.picture = picture;
@@ -87,6 +88,15 @@ public class ViewModel {
                 : DATE_FORMAT.format(timeMs);
 
         return this;
+    }
+
+    public ViewModel setSeekTime(long seekTime) {
+        this.seekTime = seekTime;
+        return this;
+    }
+
+    public long getSeekTime() {
+        return seekTime;
     }
 
     @Nullable
