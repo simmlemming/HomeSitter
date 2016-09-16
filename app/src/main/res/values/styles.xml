@@ -20,10 +20,6 @@
         <item name="colorControlActivated">@color/colorPrimary</item>
     </style>
 
-    <style name="AppTheme.WhiteSwitch">
-        <item name="colorControlActivated">@color/white</item>
-    </style>
-
     <style name="Time">
         <item name="android:textColor">@color/white</item>
         <item name="android:textSize">16dp</item>
