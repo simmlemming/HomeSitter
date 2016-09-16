@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">HomeSitter</string>
+    <string name="app_name">Home</string>
     <string name="status_ok">OK</string>
     <string name="status_disconnected">Disconnected</string>
     <string name="status_unknown">-</string>
