@@ -26,8 +26,16 @@
         <RadioButton
             android:id="@+id/cam_index_1"
             android:layout_width="wrap_content"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
             android:layout_height="wrap_content"
             android:text="CAM 2" />
+
+        <RadioButton
+            android:id="@+id/cam_index_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CAM 3" />
     </RadioGroup>
 
     <org.homesitter.widget.ImageView3by4

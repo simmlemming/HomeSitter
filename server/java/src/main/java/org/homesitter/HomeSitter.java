@@ -11,7 +11,7 @@ import java.util.TimerTask;
 
 public class HomeSitter {
     private static final int DEFAULT_PICTURE_INTERVAL_MS = 5 * 1000 * 60; // 5 min
-    private static final int CAMERAS_COUNT = 2;
+    private static final int CAMERAS_COUNT = 3;
 
     public static void main(String[] args) throws PubnubException {
         final Pubnub pubnub = new Pubnub(Keys.PUB_KEY, Keys.SUB_KEY, true);

@@ -9,7 +9,7 @@ import de.greenrobot.event.EventBus;
  * Created by mtkachenko on 02/09/16.
  */
 public class HomeSitter extends Application {
-    public static final int CAMERAS_COUNT = 2;
+    public static final int CAMERAS_COUNT = 3;
     private static final int DEFAULT_PICTURES_INTERVAL_MS = 5 * 60 * 1000;
 
     public static String TAG = "HomeSitter";

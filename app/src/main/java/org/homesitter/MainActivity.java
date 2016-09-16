@@ -18,6 +18,8 @@ import org.homesitter.service.PubnubService;
 import org.homesitter.widget.SeekButtonsWidget;
 
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private ImageView lastImageView;
@@ -29,6 +31,12 @@ public class MainActivity extends AppCompatActivity {
     private ServiceConnection serviceConnection = new PubnubServiceConnection();
 
     private Presenter presenter;
+    private static final Map<Integer, Integer> CAMERA_BUTTONS = new HashMap<>();
+    static {
+        CAMERA_BUTTONS.put(0, R.id.cam_index_0);
+        CAMERA_BUTTONS.put(1, R.id.cam_index_1);
+        CAMERA_BUTTONS.put(2, R.id.cam_index_2);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +85,16 @@ public class MainActivity extends AppCompatActivity {
         camIndexGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                int camIndex = checkedId == R.id.cam_index_0 ? 0 : 1;
+                int camIndex;
+
+                if (checkedId == R.id.cam_index_0) {
+                    camIndex = 0;
+                } else if (checkedId == R.id.cam_index_1) {
+                    camIndex = 1;
+                } else {
+                    camIndex = 2;
+                }
+
                 presenter.onCameraChange(pubnubService, camIndex);
             }
         });
@@ -109,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
         stateView.setBackgroundColor(getResources().getColor(viewModel.getStateColorResId()));
         stateView.setText(viewModel.getStateTextResId());
 
-        camIndexGroup.check(viewModel.getCamIndex() == 0 ? R.id.cam_index_0 : R.id.cam_index_1);
+        camIndexGroup.check(CAMERA_BUTTONS.get(viewModel.getCamIndex()));
 
         if (viewModel.getSeekTime() != 0) {
             seekButtonsWidget.setSeekTime(viewModel.getSeekTime());
