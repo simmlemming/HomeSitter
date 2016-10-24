@@ -148,13 +148,9 @@ public class PubnubService extends Service {
         connectivity = newConnectivity;
 
         if (stateChanged) {
-            notifyConnectivityChanged();
+            ConnectivityChangedEvent event = new ConnectivityChangedEvent(connectivity);
+            getApplicationContext().getEventBus().post(event);
         }
-    }
-
-    private void notifyConnectivityChanged() {
-        ConnectivityChangedEvent event = new ConnectivityChangedEvent(connectivity);
-        getApplicationContext().getEventBus().post(event);
     }
 
     private void notifyGeneralFail(String userFriendlyErrorMessage) {
@@ -199,7 +195,7 @@ public class PubnubService extends Service {
         public final PubnubService service;
         public final Picture picture;
 
-        public NewLivePictureReceivedEvent(Picture picture) {
+        NewLivePictureReceivedEvent(Picture picture) {
             this.service = PubnubService.this;
             this.picture = picture;
         }
@@ -211,7 +207,7 @@ public class PubnubService extends Service {
         public final PubnubService service;
         public final int cameraIndex; // For cases when picture is null
 
-        public PictureAtGivenTimeReceivedEvent(@Nullable Picture picture, int cameraIndex) {
+        PictureAtGivenTimeReceivedEvent(@Nullable Picture picture, int cameraIndex) {
             this.picture = picture;
             this.cameraIndex = cameraIndex;
             service = PubnubService.this;
@@ -221,7 +217,7 @@ public class PubnubService extends Service {
     public class PictureAtGivenTimeRequestFailedEvent extends RequestFailedEvent {
         public final int cameraIndex;
 
-        protected PictureAtGivenTimeRequestFailedEvent(int cameraIndex, String userFriendlyErrorMessage) {
+        PictureAtGivenTimeRequestFailedEvent(int cameraIndex, String userFriendlyErrorMessage) {
             super(userFriendlyErrorMessage);
             this.cameraIndex = cameraIndex;
         }
@@ -230,13 +226,13 @@ public class PubnubService extends Service {
     public abstract class RequestFailedEvent {
         public final String userFriendlyErrorMessage;
 
-        protected RequestFailedEvent(String userFriendlyErrorMessage) {
+        RequestFailedEvent(String userFriendlyErrorMessage) {
             this.userFriendlyErrorMessage = userFriendlyErrorMessage;
         }
     }
 
     public class GeneralFailureEvent extends RequestFailedEvent {
-        protected GeneralFailureEvent(String userFriendlyErrorMessage) {
+        GeneralFailureEvent(String userFriendlyErrorMessage) {
             super(userFriendlyErrorMessage);
         }
     }
@@ -253,12 +249,8 @@ public class PubnubService extends Service {
     public static class ConnectivityChangedEvent {
         public final Connectivity connectivity;
 
-        public ConnectivityChangedEvent(Connectivity connectivity) {
+        ConnectivityChangedEvent(Connectivity connectivity) {
             this.connectivity = connectivity;
         }
-    }
-
-    public Connectivity getCurrentConnectivity() {
-        return connectivity;
     }
 }

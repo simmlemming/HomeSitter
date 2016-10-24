@@ -51,53 +51,12 @@ public class MainActivity extends AppCompatActivity {
 
         presenter = new Presenter(getApplicationContext(), HomeSitter.CAMERAS_COUNT);
 
-        seekButtonsWidget.setListener(new SeekButtonsWidget.Listener() {
-            @Override
-            public void onSeek(long ms) {
-                presenter.seekBy(ms);
-            }
-
-            @Override
-            public void onSeekToNow() {
-                presenter.seekTo(Calendar.getInstance().getTimeInMillis());
-            }
-
-            @Override
-            public void onEnterSeekMode() {
-                presenter.enterSeekingMode();
-            }
-
-            @Override
-            public void onExitSeekMode() {
-                presenter.exitSeekingMode(pubnubService);
-            }
-
-            @Override
-            public void onTakePictureClick() {
-                presenter.onTakePictureClick(pubnubService);
-            }
-        });
-
-        // Before listeners set
+        // Before listeners are set
         ViewModel lastViewModel = presenter.restoreState();
         updateView(lastViewModel);
 
-        camIndexGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                int camIndex;
-
-                if (checkedId == R.id.cam_index_0) {
-                    camIndex = 0;
-                } else if (checkedId == R.id.cam_index_1) {
-                    camIndex = 1;
-                } else {
-                    camIndex = 2;
-                }
-
-                presenter.onCameraChange(pubnubService, camIndex);
-            }
-        });
+        seekButtonsWidget.setListener(seekListener);
+        camIndexGroup.setOnCheckedChangeListener(camChangeListener);
 
         getApplicationContext().getEventBus().register(this);
         getApplicationContext().getEventBus().register(presenter);
@@ -136,7 +95,6 @@ public class MainActivity extends AppCompatActivity {
             Snackbar.make(lastImageView, viewModel.getUserFriendlyErrorMessage(), Snackbar.LENGTH_SHORT).show();
             viewModel.setUserFriendlyErrorMessage(null);
         }
-
     }
 
     @Override
@@ -152,6 +110,50 @@ public class MainActivity extends AppCompatActivity {
     public HomeSitter getApplicationContext() {
         return (HomeSitter) super.getApplicationContext();
     }
+
+    private SeekButtonsWidget.Listener seekListener = new SeekButtonsWidget.Listener() {
+        @Override
+        public void onSeek(long ms) {
+            presenter.seekBy(ms);
+        }
+
+        @Override
+        public void onSeekToNow() {
+            presenter.seekTo(Calendar.getInstance().getTimeInMillis());
+        }
+
+        @Override
+        public void onEnterSeekMode() {
+            presenter.enterSeekingMode();
+        }
+
+        @Override
+        public void onExitSeekMode() {
+            presenter.exitSeekingMode(pubnubService);
+        }
+
+        @Override
+        public void onTakePictureClick() {
+            presenter.onTakePictureClick(pubnubService);
+        }
+    };
+
+    private RadioGroup.OnCheckedChangeListener camChangeListener = new RadioGroup.OnCheckedChangeListener() {
+        @Override
+        public void onCheckedChanged(RadioGroup group, int checkedId) {
+            int camIndex;
+
+            if (checkedId == R.id.cam_index_0) {
+                camIndex = 0;
+            } else if (checkedId == R.id.cam_index_1) {
+                camIndex = 1;
+            } else {
+                camIndex = 2;
+            }
+
+            presenter.onCameraChange(pubnubService, camIndex);
+        }
+    };
 
     private class PubnubServiceConnection implements ServiceConnection {
 

@@ -11,8 +11,6 @@ import android.widget.TextView;
  * Created by mtkachenko on 16/09/16.
  */
 public class AdjustableTextView extends TextView {
-    private boolean mIsScrolling;
-    //    private ViewConfiguration vc;
     private int touchSlop;
 
     public interface OnAdjustListener {

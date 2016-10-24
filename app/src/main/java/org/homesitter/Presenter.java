@@ -99,8 +99,8 @@ public class Presenter {
     }
 
     private boolean isPictureYoungerThan(Picture picture, long timeStartMs, long ageMs) {
-        return (picture != null) // Have last picture
-                && (Math.abs(timeStartMs - picture.timeMs)) < ageMs;
+        return (picture != null)
+            && (Math.abs(timeStartMs - picture.timeMs)) < ageMs;
     }
 
     public void requestLivePicture(PubnubService service) {
